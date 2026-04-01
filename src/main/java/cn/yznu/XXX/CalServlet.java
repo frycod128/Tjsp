@@ -10,9 +10,10 @@ import cn.yznu.XXX.util.PrimeUtil;
 /**
  * 哥德巴赫猜想计算Servlet
  * 处理质数分解的核心业务逻辑
+ * 注意：输入校验已在LoginServlet中完成，本Servlet专注于业务逻辑
  *
  * @author YourName
- * @version 1.0
+ * @version 2.0
  */
 @WebServlet("/CalServlet")
 public class CalServlet extends HttpServlet {
@@ -33,33 +34,16 @@ public class CalServlet extends HttpServlet {
         String username = (String) session.getAttribute("username");
         String numberStr = (String) session.getAttribute("number");
 
-        // 检查会话中是否存在数字参数
+        // 检查会话中是否存在数字参数（防御性编程）
         if (numberStr == null || numberStr.trim().isEmpty()) {
-            request.setAttribute("errorMsg", "请输入有效的偶数！");
+            request.setAttribute("errorMsg", "会话已过期，请重新登录！");
             RequestDispatcher dispatcher = request.getRequestDispatcher("login.jsp");
             dispatcher.forward(request, response);
             return;
         }
 
-        int n;
-        try {
-            // 尝试将字符串转换为整数
-            n = Integer.parseInt(numberStr.trim());
-        } catch (NumberFormatException e) {
-            // 数字格式错误时的处理
-            request.setAttribute("errorMsg", "请输入有效的数字！");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("login.jsp");
-            dispatcher.forward(request, response);
-            return;
-        }
-
-        // 校验输入的偶数是否有效（大于100且为偶数）
-        if (!PrimeUtil.isValidEvenNumber(n)) {
-            request.setAttribute("errorMsg", "请输入大于100的偶数！");
-            RequestDispatcher dispatcher = request.getRequestDispatcher("login.jsp");
-            dispatcher.forward(request, response);
-            return;
-        }
+        // 转换数字（此时应该已经是有效数字，由LoginServlet保证）
+        int n = Integer.parseInt(numberStr.trim());
 
         // 调用工具类查找两个质数
         int[] primes = PrimeUtil.findTwoPrimesForGoldbach(n);
@@ -75,7 +59,7 @@ public class CalServlet extends HttpServlet {
             dispatcher.forward(request, response);
         } else {
             // 未找到质数对（理论上对于大于2的偶数总是存在，但为了健壮性保留此处理）
-            request.setAttribute("errorMsg", "无法找到符合条件的两个质数！");
+            request.setAttribute("errorMsg", "无法找到符合条件的两个质数，请尝试其他数字！");
             RequestDispatcher dispatcher = request.getRequestDispatcher("login.jsp");
             dispatcher.forward(request, response);
         }

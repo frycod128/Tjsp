@@ -6,8 +6,28 @@
     <title>登录页面</title>
     <script>
         function validateForm() {
+            var username = document.getElementById("username").value.trim();
+            var password = document.getElementById("password").value;
             var numberInput = document.getElementById("number");
             var n = parseInt(numberInput.value);
+
+            // 用户名校验
+            if (username === "") {
+                alert("用户名不能为空！");
+                return false;
+            }
+
+            // 密码校验
+            if (password === "") {
+                alert("密码不能为空！");
+                return false;
+            }
+
+            // 数字校验
+            if (numberInput.value.trim() === "") {
+                alert("请输入偶数n！");
+                return false;
+            }
 
             if (isNaN(n)) {
                 alert("请输入有效的数字！");
@@ -29,24 +49,37 @@
     </script>
 </head>
 <body>
-<h2>用户登录</h2>
-<%
-    String errorMsg = (String) request.getAttribute("errorMsg");
-    if (errorMsg != null) {
-        out.println("<p style='color:red'>" + errorMsg + "</p>");
-    }
-%>
-<form action="LoginServlet" method="post" onsubmit="return validateForm()">
-    <label>用户名：</label>
-    <input type="text" name="username" required><br><br>
+<div class="form-container">
+    <h2>用户登录</h2>
 
-    <label>密码：</label>
-    <input type="password" name="password" required><br><br>
+    <%
+        String errorMsg = (String) request.getAttribute("errorMsg");
+        if (errorMsg != null) {
+            out.println("<div class='error-message'>❌ " + errorMsg + "</div>");
+        }
+    %>
 
-    <label>偶数n（大于100）：</label>
-    <input type="number" id="number" name="number" step="2" required><br><br>
+    <form action="LoginServlet" method="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label>用户名：</label>
+            <input type="text" id="username" name="username" required>
+        </div>
 
-    <input type="submit" value="登录">
-</form>
+        <div class="form-group">
+            <label>密码：</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label>偶数n：</label>
+            <input type="number" id="number" name="number" step="2" required>
+            <div class="hint">请输入大于100的偶数（如：102、104等）</div>
+        </div>
+
+        <div class="form-group">
+            <input type="submit" value="登录验证">
+        </div>
+    </form>
+</div>
 </body>
 </html>
