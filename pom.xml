@@ -46,6 +46,13 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Gson (解析JSON配置文件) -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.10.1</version>
+        </dependency>
+
         <!-- MySQL Connector (根据你的MySQL版本选择) -->
         <dependency>
             <groupId>mysql</groupId>
