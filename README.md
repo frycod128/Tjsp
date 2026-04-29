@@ -17,3 +17,9 @@
 归档文件包含此声明文件及完整项目源码/配置，以备后续追溯或对照验证。归档后如需再次对照，请基于对应版本的 Spring Boot 项目重新生成临时对照环境。
 
 ---
+
+## 小工具
+
+如果需要大量复制整合项目内文本
+
+不妨看看：[filecollector](https://github.com/frycod128/filecollector)
