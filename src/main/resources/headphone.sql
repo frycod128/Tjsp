@@ -1,4 +1,6 @@
--- 头戴式耳机商品表
+CREATE DATABASE IF NOT EXISTS headphone_shop DEFAULT CHARSET utf8mb4;
+USE headphone_shop;
+
 CREATE TABLE headphone (
                            id INT PRIMARY KEY AUTO_INCREMENT COMMENT '耳机ID',
                            model VARCHAR(100) NOT NULL COMMENT '型号名称',

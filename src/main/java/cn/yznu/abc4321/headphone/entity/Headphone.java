@@ -1,4 +1,4 @@
-package cn.yznu.XXX0000.headphone;
+package cn.yznu.abc4321.headphone.entity;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -17,10 +17,8 @@ public class Headphone {
     private Boolean noiseCancelling;
     private Timestamp createTime;
 
-    // 无参构造
     public Headphone() {}
 
-    // 全参构造
     public Headphone(Integer id, String model, String brand, Double driverSize,
                      Integer impedance, Integer sensitivity, String frequencyResponse,
                      BigDecimal price, Integer stock, Boolean wireless,
@@ -39,7 +37,6 @@ public class Headphone {
         this.createTime = createTime;
     }
 
-    // Getter和Setter方法
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -82,7 +79,19 @@ public class Headphone {
 
     @Override
     public String toString() {
-        return String.format("Headphone[id=%d, model=%s, brand=%s, price=%.2f, stock=%d]",
-                id, model, brand, price, stock);
+        return "Headphone{" +
+                "id=" + id +
+                ", model='" + model + '\'' +
+                ", brand='" + brand + '\'' +
+                ", driverSize=" + driverSize +
+                ", impedance=" + impedance +
+                ", sensitivity=" + sensitivity +
+                ", frequencyResponse='" + frequencyResponse + '\'' +
+                ", price=" + price +
+                ", stock=" + stock +
+                ", wireless=" + wireless +
+                ", noiseCancelling=" + noiseCancelling +
+                ", createTime=" + createTime +
+                '}';
     }
 }
