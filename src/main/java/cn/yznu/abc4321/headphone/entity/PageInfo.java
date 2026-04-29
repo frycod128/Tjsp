@@ -3,11 +3,11 @@ package cn.yznu.abc4321.headphone.entity;
 import java.util.List;
 
 public class PageInfo<T> {
-    private int currentPage;    // 当前页码
-    private int pageSize;       // 每页显示记录数
-    private int totalCount;     // 总记录数
-    private int totalPage;      // 总页数
-    private List<T> list;       // 当前页数据
+    private int currentPage;
+    private int pageSize;
+    private int totalCount;
+    private int totalPage;
+    private List<T> list;
 
     public PageInfo() {}
 

@@ -1,0 +1,16 @@
+{
+  "columns": {
+    "id": "编号",
+    "model": "型号名称",
+    "brand": "品牌",
+    "driver_size": "驱动单元(mm)",
+    "impedance": "阻抗(Ω)",
+    "sensitivity": "灵敏度(dB)",
+    "frequency_response": "频响范围",
+    "price": "价格(¥)",
+    "stock": "库存数量",
+    "wireless": "无线类型",
+    "noise_cancelling": "降噪功能",
+    "create_time": "创建时间"
+  }
+}

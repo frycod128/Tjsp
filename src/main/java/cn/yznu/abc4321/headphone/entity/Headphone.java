@@ -1,9 +1,10 @@
 package cn.yznu.abc4321.headphone.entity;
 
+import cn.yznu.abc4321.common.entity.BaseEntity;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-public class Headphone {
+public class Headphone implements BaseEntity {
     private Integer id;
     private String model;
     private String brand;
@@ -17,26 +18,29 @@ public class Headphone {
     private Boolean noiseCancelling;
     private Timestamp createTime;
 
-    public Headphone() {}
-
-    public Headphone(Integer id, String model, String brand, Double driverSize,
-                     Integer impedance, Integer sensitivity, String frequencyResponse,
-                     BigDecimal price, Integer stock, Boolean wireless,
-                     Boolean noiseCancelling, Timestamp createTime) {
-        this.id = id;
-        this.model = model;
-        this.brand = brand;
-        this.driverSize = driverSize;
-        this.impedance = impedance;
-        this.sensitivity = sensitivity;
-        this.frequencyResponse = frequencyResponse;
-        this.price = price;
-        this.stock = stock;
-        this.wireless = wireless;
-        this.noiseCancelling = noiseCancelling;
-        this.createTime = createTime;
+    @Override
+    public String getTableName() {
+        return "headphone";
     }
 
+    @Override
+    public String getPrimaryKeyColumn() {
+        return "id";
+    }
+
+    @Override
+    public Object getPrimaryKeyValue() {
+        return id;
+    }
+
+    @Override
+    public void setPrimaryKeyValue(Object value) {
+        if (value instanceof Number) {
+            this.id = ((Number) value).intValue();
+        }
+    }
+
+    // Getter和Setter方法
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
@@ -79,19 +83,7 @@ public class Headphone {
 
     @Override
     public String toString() {
-        return "Headphone{" +
-                "id=" + id +
-                ", model='" + model + '\'' +
-                ", brand='" + brand + '\'' +
-                ", driverSize=" + driverSize +
-                ", impedance=" + impedance +
-                ", sensitivity=" + sensitivity +
-                ", frequencyResponse='" + frequencyResponse + '\'' +
-                ", price=" + price +
-                ", stock=" + stock +
-                ", wireless=" + wireless +
-                ", noiseCancelling=" + noiseCancelling +
-                ", createTime=" + createTime +
-                '}';
+        return "Headphone{id=" + id + ", model='" + model + "', brand='" + brand +
+                "', price=" + price + ", stock=" + stock + "}";
     }
 }

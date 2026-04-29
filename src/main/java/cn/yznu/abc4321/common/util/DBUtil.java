@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.headphone.util;
+package cn.yznu.abc4321.common.util;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
