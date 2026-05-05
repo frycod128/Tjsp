@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.headphone.entity;
+package cn.yznu.abc4321.common.entity;
 
 import java.util.List;
 

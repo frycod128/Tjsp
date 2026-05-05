@@ -4,7 +4,7 @@ import cn.yznu.abc4321.common.entity.BaseEntity;
 import cn.yznu.abc4321.common.service.BaseService;
 import cn.yznu.abc4321.common.util.ColumnMappingLoader;
 import cn.yznu.abc4321.common.util.ReflectUtil;
-import cn.yznu.abc4321.headphone.entity.PageInfo;
+import cn.yznu.abc4321.common.entity.PageInfo;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -15,7 +15,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public abstract class BaseServlet<T extends BaseEntity> extends HttpServlet {

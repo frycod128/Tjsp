@@ -2,7 +2,7 @@ package cn.yznu.abc4321.common.service.impl;
 
 import cn.yznu.abc4321.common.dao.BaseDao;
 import cn.yznu.abc4321.common.service.BaseService;
-import cn.yznu.abc4321.headphone.entity.PageInfo;
+import cn.yznu.abc4321.common.entity.PageInfo;
 
 import java.util.List;
 import java.util.Map;

@@ -8,7 +8,7 @@
     <display-name>T-ser Headphone Management</display-name>
 
     <welcome-file-list>
-        <welcome-file>headphone/headphone-list.jsp</welcome-file>
+        <welcome-file>/index.jsp</welcome-file>
     </welcome-file-list>
 
 </web-app>

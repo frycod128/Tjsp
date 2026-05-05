@@ -1,6 +1,6 @@
 package cn.yznu.abc4321.common.service;
 
-import cn.yznu.abc4321.headphone.entity.PageInfo;
+import cn.yznu.abc4321.common.entity.PageInfo;
 
 import java.util.List;
 import java.util.Map;
