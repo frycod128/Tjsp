@@ -4,7 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="cn.yznu.abc4321.mapper.HeadphoneMapper">
 
-    <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="cn.yznu.abc4321.entity.Headphone">
         <id column="id" property="id"/>
         <result column="model" property="model"/>
@@ -20,27 +19,23 @@
         <result column="create_time" property="createTime"/>
     </resultMap>
 
-    <!-- 通用查询字段 -->
     <sql id="BaseColumns">
         id, model, brand, driver_size, impedance, sensitivity,
         frequency_response, price, stock, wireless, noise_cancelling, create_time
     </sql>
 
-    <!-- 查询所有耳机 -->
     <select id="findAll" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
         ORDER BY id
     </select>
 
-    <!-- 根据ID查询 -->
     <select id="findById" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
         WHERE id = #{id}
     </select>
 
-    <!-- 根据品牌查询 -->
     <select id="findByBrand" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -48,7 +43,6 @@
         ORDER BY price DESC
     </select>
 
-    <!-- 根据价格范围查询 -->
     <select id="findByPriceRange" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -56,7 +50,6 @@
         ORDER BY price
     </select>
 
-    <!-- 查询无线耳机 -->
     <select id="findWirelessHeadphones" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -64,7 +57,6 @@
         ORDER BY price DESC
     </select>
 
-    <!-- 查询降噪耳机 -->
     <select id="findNoiseCancellingHeadphones" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -72,8 +64,8 @@
         ORDER BY price DESC
     </select>
 
-    <!-- 多条件动态查询（使用参数Map或单独参数）-->
-    <select id="findDynamic" resultMap="BaseResultMap">
+    <!-- 动态查询使用Map参数 -->
+    <select id="findDynamic" parameterType="map" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
         <where>
@@ -89,6 +81,12 @@
             <if test="noiseCancelling != null">
                 AND noise_cancelling = #{noiseCancelling}
             </if>
+            <if test="minPrice != null">
+                AND price &gt;= #{minPrice}
+            </if>
+            <if test="maxPrice != null">
+                AND price &lt;= #{maxPrice}
+            </if>
             <if test="price != null">
                 AND price &lt;= #{price}
             </if>
@@ -96,7 +94,6 @@
         ORDER BY price
     </select>
 
-    <!-- 新增耳机（使用主键回填） -->
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO headphone (model, brand, driver_size, impedance, sensitivity,
                                frequency_response, price, stock, wireless, noise_cancelling)
@@ -104,7 +101,6 @@
                 #{frequencyResponse}, #{price}, #{stock}, #{wireless}, #{noiseCancelling})
     </insert>
 
-    <!-- 更新耳机 -->
     <update id="update">
         UPDATE headphone
         <set>
@@ -122,12 +118,10 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 删除耳机 -->
     <delete id="deleteById">
         DELETE FROM headphone WHERE id = #{id}
     </delete>
 
-    <!-- 批量删除 -->
     <delete id="batchDelete">
         DELETE FROM headphone WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
@@ -135,14 +129,12 @@
         </foreach>
     </delete>
 
-    <!-- 更新库存 -->
     <update id="updateStock">
         UPDATE headphone
         SET stock = #{stock}
         WHERE id = #{id}
     </update>
 
-    <!-- 统计各品牌数量 -->
     <select id="countByBrand" resultType="java.util.HashMap">
         SELECT brand, COUNT(*) as count, ROUND(AVG(price), 2) as avgPrice
         FROM headphone
@@ -150,7 +142,6 @@
         ORDER BY count DESC
     </select>
 
-    <!-- 分页查询 -->
     <select id="findByPage" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -158,7 +149,6 @@
         LIMIT #{offset}, #{limit}
     </select>
 
-    <!-- 获取总数 -->
     <select id="getTotalCount" resultType="long">
         SELECT COUNT(*) FROM headphone
     </select>

@@ -13,7 +13,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,60 +34,31 @@ public class HeadphoneController extends HttpServlet {
             Map<String, Object> result = new HashMap<>();
 
             if (pathInfo == null || "/".equals(pathInfo) || "/all".equals(pathInfo)) {
-                // 查询所有
                 List<Headphone> list = mapper.findAll();
                 result.put("code", 200);
                 result.put("data", list);
-                result.put("msg", "查询成功");
-            } else if (pathInfo.equals("/wireless")) {
-                // 查询无线耳机
-                List<Headphone> list = mapper.findWirelessHeadphones();
-                result.put("code", 200);
-                result.put("data", list);
-                result.put("msg", "查询无线耳机成功");
-            } else if (pathInfo.equals("/noise")) {
-                // 查询降噪耳机
-                List<Headphone> list = mapper.findNoiseCancellingHeadphones();
-                result.put("code", 200);
-                result.put("data", list);
-                result.put("msg", "查询降噪耳机成功");
-            } else if (pathInfo.equals("/brands")) {
-                // 统计各品牌
-                List<Map<String, Object>> list = mapper.countByBrand();
-                result.put("code", 200);
-                result.put("data", list);
-                result.put("msg", "统计成功");
+                result.put("msg", "success");
             } else if (pathInfo.matches("/\\d+")) {
-                // 根据ID查询
                 int id = Integer.parseInt(pathInfo.substring(1));
                 Headphone headphone = mapper.findById(id);
                 if (headphone != null) {
                     result.put("code", 200);
                     result.put("data", headphone);
-                    result.put("msg", "查询成功");
+                    result.put("msg", "success");
                 } else {
                     result.put("code", 404);
-                    result.put("msg", "耳机不存在");
+                    result.put("msg", "not found");
                 }
             } else {
-                // 条件查询
-                String brand = req.getParameter("brand");
-                if (brand != null && !brand.isEmpty()) {
-                    List<Headphone> list = mapper.findByBrand(brand);
-                    result.put("code", 200);
-                    result.put("data", list);
-                    result.put("msg", "按品牌查询成功");
-                } else {
-                    result.put("code", 400);
-                    result.put("msg", "无效的请求");
-                }
+                result.put("code", 400);
+                result.put("msg", "invalid request");
             }
             out.write(objectMapper.writeValueAsString(result));
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> error = new HashMap<>();
             error.put("code", 500);
-            error.put("msg", "服务器错误: " + e.getMessage());
+            error.put("msg", e.getMessage());
             out.write(objectMapper.writeValueAsString(error));
         }
     }
@@ -103,8 +73,6 @@ public class HeadphoneController extends HttpServlet {
 
         try (SqlSession sqlSession = MyBatisUtil.getSqlSession(false)) {
             HeadphoneMapper mapper = sqlSession.getMapper(HeadphoneMapper.class);
-
-            // 解析JSON数据
             Headphone headphone = objectMapper.readValue(req.getInputStream(), Headphone.class);
 
             int rows = mapper.insert(headphone);
@@ -113,15 +81,15 @@ public class HeadphoneController extends HttpServlet {
             if (rows > 0) {
                 result.put("code", 200);
                 result.put("data", headphone);
-                result.put("msg", "新增成功");
+                result.put("msg", "success");
             } else {
                 result.put("code", 500);
-                result.put("msg", "新增失败");
+                result.put("msg", "insert failed");
             }
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 500);
-            result.put("msg", "服务器错误: " + e.getMessage());
+            result.put("msg", e.getMessage());
         }
         out.write(objectMapper.writeValueAsString(result));
     }
@@ -136,23 +104,26 @@ public class HeadphoneController extends HttpServlet {
 
         try (SqlSession sqlSession = MyBatisUtil.getSqlSession(false)) {
             HeadphoneMapper mapper = sqlSession.getMapper(HeadphoneMapper.class);
-
             Headphone headphone = objectMapper.readValue(req.getInputStream(), Headphone.class);
 
-            int rows = mapper.update(headphone);
-            sqlSession.commit();
-
-            if (rows > 0) {
-                result.put("code", 200);
-                result.put("msg", "更新成功");
+            if (headphone.getId() == null) {
+                result.put("code", 400);
+                result.put("msg", "id required");
             } else {
-                result.put("code", 500);
-                result.put("msg", "更新失败");
+                int rows = mapper.update(headphone);
+                sqlSession.commit();
+                if (rows > 0) {
+                    result.put("code", 200);
+                    result.put("msg", "success");
+                } else {
+                    result.put("code", 404);
+                    result.put("msg", "record not found");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 500);
-            result.put("msg", "服务器错误: " + e.getMessage());
+            result.put("msg", e.getMessage());
         }
         out.write(objectMapper.writeValueAsString(result));
     }
@@ -172,22 +143,21 @@ public class HeadphoneController extends HttpServlet {
                 int id = Integer.parseInt(pathInfo.substring(1));
                 int rows = mapper.deleteById(id);
                 sqlSession.commit();
-
                 if (rows > 0) {
                     result.put("code", 200);
-                    result.put("msg", "删除成功");
+                    result.put("msg", "success");
                 } else {
                     result.put("code", 404);
-                    result.put("msg", "耳机不存在");
+                    result.put("msg", "not found");
                 }
             } else {
                 result.put("code", 400);
-                result.put("msg", "无效的请求");
+                result.put("msg", "invalid request");
             }
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 500);
-            result.put("msg", "服务器错误: " + e.getMessage());
+            result.put("msg", e.getMessage());
         }
         out.write(objectMapper.writeValueAsString(result));
     }
