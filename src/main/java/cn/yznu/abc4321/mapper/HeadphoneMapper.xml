@@ -72,7 +72,7 @@
         ORDER BY price DESC
     </select>
 
-    <!-- 多条件动态查询 -->
+    <!-- 多条件动态查询（使用参数Map或单独参数）-->
     <select id="findDynamic" resultMap="BaseResultMap">
         SELECT <include refid="BaseColumns"/>
         FROM headphone
@@ -91,9 +91,6 @@
             </if>
             <if test="price != null">
                 AND price &lt;= #{price}
-            </if>
-            <if test="minPrice != null and maxPrice != null">
-                AND price BETWEEN #{minPrice} AND #{maxPrice}
             </if>
         </where>
         ORDER BY price
@@ -147,7 +144,7 @@
 
     <!-- 统计各品牌数量 -->
     <select id="countByBrand" resultType="java.util.HashMap">
-        SELECT brand, COUNT(*) as count, AVG(price) as avgPrice
+        SELECT brand, COUNT(*) as count, ROUND(AVG(price), 2) as avgPrice
         FROM headphone
         GROUP BY brand
         ORDER BY count DESC
