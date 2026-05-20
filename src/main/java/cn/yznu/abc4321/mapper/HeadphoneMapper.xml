@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yznu.abc4321.mapper.HeadphoneMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="cn.yznu.abc4321.entity.Headphone">
+        <id column="id" property="id"/>
+        <result column="model" property="model"/>
+        <result column="brand" property="brand"/>
+        <result column="driver_size" property="driverSize"/>
+        <result column="impedance" property="impedance"/>
+        <result column="sensitivity" property="sensitivity"/>
+        <result column="frequency_response" property="frequencyResponse"/>
+        <result column="price" property="price"/>
+        <result column="stock" property="stock"/>
+        <result column="wireless" property="wireless"/>
+        <result column="noise_cancelling" property="noiseCancelling"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 通用查询字段 -->
+    <sql id="BaseColumns">
+        id, model, brand, driver_size, impedance, sensitivity,
+        frequency_response, price, stock, wireless, noise_cancelling, create_time
+    </sql>
+
+    <!-- 查询所有耳机 -->
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        ORDER BY id
+    </select>
+
+    <!-- 根据ID查询 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据品牌查询 -->
+    <select id="findByBrand" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        WHERE brand = #{brand}
+        ORDER BY price DESC
+    </select>
+
+    <!-- 根据价格范围查询 -->
+    <select id="findByPriceRange" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        WHERE price BETWEEN #{minPrice} AND #{maxPrice}
+        ORDER BY price
+    </select>
+
+    <!-- 查询无线耳机 -->
+    <select id="findWirelessHeadphones" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        WHERE wireless = 1
+        ORDER BY price DESC
+    </select>
+
+    <!-- 查询降噪耳机 -->
+    <select id="findNoiseCancellingHeadphones" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        WHERE noise_cancelling = 1
+        ORDER BY price DESC
+    </select>
+
+    <!-- 多条件动态查询 -->
+    <select id="findDynamic" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        <where>
+            <if test="brand != null and brand != ''">
+                AND brand = #{brand}
+            </if>
+            <if test="model != null and model != ''">
+                AND model LIKE CONCAT('%', #{model}, '%')
+            </if>
+            <if test="wireless != null">
+                AND wireless = #{wireless}
+            </if>
+            <if test="noiseCancelling != null">
+                AND noise_cancelling = #{noiseCancelling}
+            </if>
+            <if test="price != null">
+                AND price &lt;= #{price}
+            </if>
+            <if test="minPrice != null and maxPrice != null">
+                AND price BETWEEN #{minPrice} AND #{maxPrice}
+            </if>
+        </where>
+        ORDER BY price
+    </select>
+
+    <!-- 新增耳机（使用主键回填） -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO headphone (model, brand, driver_size, impedance, sensitivity,
+                               frequency_response, price, stock, wireless, noise_cancelling)
+        VALUES (#{model}, #{brand}, #{driverSize}, #{impedance}, #{sensitivity},
+                #{frequencyResponse}, #{price}, #{stock}, #{wireless}, #{noiseCancelling})
+    </insert>
+
+    <!-- 更新耳机 -->
+    <update id="update">
+        UPDATE headphone
+        <set>
+            <if test="model != null">model = #{model},</if>
+            <if test="brand != null">brand = #{brand},</if>
+            <if test="driverSize != null">driver_size = #{driverSize},</if>
+            <if test="impedance != null">impedance = #{impedance},</if>
+            <if test="sensitivity != null">sensitivity = #{sensitivity},</if>
+            <if test="frequencyResponse != null">frequency_response = #{frequencyResponse},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="stock != null">stock = #{stock},</if>
+            <if test="wireless != null">wireless = #{wireless},</if>
+            <if test="noiseCancelling != null">noise_cancelling = #{noiseCancelling}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除耳机 -->
+    <delete id="deleteById">
+        DELETE FROM headphone WHERE id = #{id}
+    </delete>
+
+    <!-- 批量删除 -->
+    <delete id="batchDelete">
+        DELETE FROM headphone WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 更新库存 -->
+    <update id="updateStock">
+        UPDATE headphone
+        SET stock = #{stock}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 统计各品牌数量 -->
+    <select id="countByBrand" resultType="java.util.HashMap">
+        SELECT brand, COUNT(*) as count, AVG(price) as avgPrice
+        FROM headphone
+        GROUP BY brand
+        ORDER BY count DESC
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="findByPage" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM headphone
+        ORDER BY id
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 获取总数 -->
+    <select id="getTotalCount" resultType="long">
+        SELECT COUNT(*) FROM headphone
+    </select>
+</mapper>
