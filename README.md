@@ -13,3 +13,9 @@
 如果需要大量复制整合项目内文本
 
 不妨看看：[filecollector](https://github.com/frycod128/filecollector)
+
+---
+
+## Generic-Interface-Version_sj6
+
+分支说明[Generic-Interface-Version_sj6.md](Generic-Interface-Version_sj6.md)
