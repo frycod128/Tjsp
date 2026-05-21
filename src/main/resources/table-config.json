@@ -1,0 +1,29 @@
+{
+  "tableName": "headphone",
+  "primaryKey": "id",
+  "columns": {
+    "id": "编号",
+    "model": "型号名称",
+    "brand": "品牌",
+    "driver_size": "驱动单元(mm)",
+    "impedance": "阻抗(Ω)",
+    "sensitivity": "灵敏度(dB)",
+    "frequency_response": "频响范围",
+    "price": "价格(¥)",
+    "stock": "库存数量",
+    "wireless": "无线类型",
+    "noise_cancelling": "降噪功能",
+    "create_time": "创建时间"
+  },
+  "editableColumns": ["model", "brand", "driver_size", "impedance", "sensitivity", "frequency_response", "price", "stock", "wireless", "noise_cancelling"],
+  "formTypes": {
+    "driver_size": "number",
+    "impedance": "number",
+    "sensitivity": "number",
+    "price": "number",
+    "stock": "number",
+    "wireless": "select:0=否,1=是",
+    "noise_cancelling": "select:0=否,1=是"
+  },
+  "searchableColumns": ["model", "brand"]
+}

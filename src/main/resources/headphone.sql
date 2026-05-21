@@ -1,8 +1,6 @@
--- 创建数据库（如果不存在）
-CREATE DATABASE IF NOT EXISTS headphone_sj6 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE headphone_sj6;
+CREATE DATABASE IF NOT EXISTS test DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE test;
 
--- 头戴式耳机商品表
 DROP TABLE IF EXISTS headphone;
 CREATE TABLE headphone (
                            id INT PRIMARY KEY AUTO_INCREMENT COMMENT '耳机ID',
@@ -19,7 +17,6 @@ CREATE TABLE headphone (
                            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='头戴式耳机商品表';
 
--- 插入8条测试数据
 INSERT INTO headphone (model, brand, driver_size, impedance, sensitivity, frequency_response, price, stock, wireless, noise_cancelling) VALUES
                                                                                                                                             ('WH-1000XM5', 'Sony', 30.0, 48, 102, '4Hz-40kHz', 2299.00, 45, 1, 1),
                                                                                                                                             ('QuietComfort 45', 'Bose', 40.0, 32, 96, '20Hz-20kHz', 1999.00, 32, 1, 1),

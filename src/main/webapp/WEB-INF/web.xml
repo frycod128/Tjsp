@@ -5,11 +5,10 @@
          http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
          version="3.1">
 
-    <display-name>Headphone Management System</display-name>
+    <display-name>Dynamic Data Management System</display-name>
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
     </welcome-file-list>
 
-    <!-- 注意：不再配置 servlet 映射，因为 Controller 使用了 @WebServlet 注解 -->
 </web-app>

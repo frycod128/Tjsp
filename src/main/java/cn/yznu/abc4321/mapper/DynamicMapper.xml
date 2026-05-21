@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yznu.abc4321.mapper.DynamicMapper">
+
+    <!-- 查询所有记录 -->
+    <select id="findAll" resultType="java.util.HashMap">
+        SELECT * FROM ${tableName} ORDER BY ${primaryKey}
+    </select>
+
+    <!-- 根据ID查询 -->
+    <select id="findById" resultType="java.util.HashMap">
+        SELECT * FROM ${tableName} WHERE ${primaryKey} = #{id}
+    </select>
+
+    <!-- 搜索 -->
+    <select id="search" resultType="java.util.HashMap">
+        SELECT * FROM ${tableName}
+        WHERE ${field} LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY ${primaryKey}
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="findByPage" resultType="java.util.HashMap">
+        SELECT * FROM ${tableName} ORDER BY ${primaryKey} LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 获取总数 -->
+    <select id="getTotalCount" resultType="long">
+        SELECT COUNT(*) FROM ${tableName}
+    </select>
+
+    <!-- 动态插入 - 不使用自动主键返回 -->
+    <insert id="insert">
+        INSERT INTO ${tableName}
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <foreach collection="data" index="key" item="value">
+                <if test="value != null and value != ''">
+                    ${key},
+                </if>
+            </foreach>
+        </trim>
+        VALUES
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <foreach collection="data" index="key" item="value">
+                <if test="value != null and value != ''">
+                    #{value},
+                </if>
+            </foreach>
+        </trim>
+    </insert>
+
+    <!-- 查询最后插入的ID（MySQL专用） -->
+    <select id="getLastInsertId" resultType="java.lang.Long">
+        SELECT LAST_INSERT_ID()
+    </select>
+
+    <!-- 动态更新 -->
+    <update id="update">
+        UPDATE ${tableName}
+        <set>
+            <foreach collection="data" index="key" item="value">
+                <if test="key != null and value != null and key != primaryKey and key != 'create_time' and key != 'update_time'">
+                    ${key} = #{value},
+                </if>
+            </foreach>
+        </set>
+        WHERE ${primaryKey} = #{data.${primaryKey}}
+    </update>
+
+    <!-- 删除 -->
+    <delete id="deleteById">
+        DELETE FROM ${tableName} WHERE ${primaryKey} = #{id}
+    </delete>
+
+    <!-- 获取表的所有列名 -->
+    <select id="getTableColumns" resultType="java.util.HashMap">
+        SELECT
+            COLUMN_NAME,
+            DATA_TYPE,
+            IS_NULLABLE,
+            COLUMN_DEFAULT,
+            COLUMN_COMMENT
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = #{tableName}
+        ORDER BY ORDINAL_POSITION
+    </select>
+
+    <!-- 获取主键列名 -->
+    <select id="getPrimaryKey" resultType="string">
+        SELECT COLUMN_NAME
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = #{tableName}
+          AND COLUMN_KEY = 'PRI'
+            LIMIT 1
+    </select>
+
+    <!-- 获取表信息 -->
+    <select id="getTableInfo" resultType="java.util.HashMap">
+        SELECT
+            TABLE_NAME,
+            TABLE_COMMENT,
+            TABLE_ROWS
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_SCHEMA = DATABASE()
+          AND TABLE_NAME = #{tableName}
+    </select>
+</mapper>
