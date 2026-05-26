@@ -97,6 +97,18 @@
         button.btn-edit {
             background-color: #2196F3;
         }
+        button.btn-page {
+            background-color: #607D8B;
+            padding: 3px 10px;
+            margin: 0 2px;
+        }
+        button.btn-page.active {
+            background-color: #4CAF50;
+        }
+        button.btn-page:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
         .error { color: red; }
         .success { color: green; }
         .message { margin: 10px 0; padding: 10px; border-radius: 3px; }
@@ -127,14 +139,59 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
-        .refresh-btn {
-            background-color: #607D8B;
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
-        .search-field-select {
+        .page-size-select {
+            width: 80px;
+            padding: 3px;
+        }
+
+        .page-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .query-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .query-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+
+        .query-group label {
+            font-weight: bold;
+            margin: 0;
+            width: auto;
+        }
+
+        .query-group input {
             width: 150px;
+            margin: 0;
+        }
+
+        hr {
+            margin: 10px 0;
+            border: none;
+            border-top: 1px solid #eee;
         }
     </style>
 </head>
@@ -145,18 +202,27 @@
 
 <!-- 查询区域 -->
 <div>
-    <div class="collapse-header" onclick="toggleCollapse('search')">▼ 查询</div>
+    <div class="collapse-header" onclick="toggleCollapse('search')">▼ 高级查询</div>
     <div id="searchCollapse" class="collapse-content">
-        <div class="form-group">
-            <label>查询字段:</label>
-            <select id="searchField" class="search-field-select"></select>
+        <div class="query-section">
+            <div class="query-group">
+                <label>商品编号:</label>
+                <input type="text" id="searchById" placeholder="精确查询ID">
+                <button onclick="searchById()">查询</button>
+            </div>
+            <div class="query-group">
+                <label>商品名称:</label>
+                <input type="text" id="searchByName" placeholder="模糊查询">
+                <button onclick="searchByName()">查询</button>
+            </div>
+            <div class="query-group">
+                <label>查询字段:</label>
+                <select id="searchField"></select>
+                <input type="text" id="searchKeyword" placeholder="请输入关键字">
+                <button onclick="search()">查询</button>
+            </div>
+            <button onclick="loadPage(1)">显示全部</button>
         </div>
-        <div class="form-group">
-            <label>关键字:</label>
-            <input type="text" id="searchKeyword" placeholder="请输入">
-        </div>
-        <button onclick="search()">查询</button>
-        <button onclick="loadAll()">显示全部</button>
     </div>
 </div>
 
@@ -177,8 +243,17 @@
 <!-- 数据表格 -->
 <div class="table-container">
     <div class="table-header">
-        <span id="recordCount"></span>
-        <button class="refresh-btn" onclick="loadAll()">刷新</button>
+        <div class="pagination-controls">
+            <span class="page-info" id="recordCount">共 0 条记录</span>
+            <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize()">
+                <option value="5">5条/页</option>
+                <option value="10" selected>10条/页</option>
+                <option value="20">20条/页</option>
+                <option value="50">50条/页</option>
+            </select>
+            <button class="refresh-btn" onclick="loadPage(1)">刷新</button>
+        </div>
+        <div id="pagination" class="pagination-controls"></div>
     </div>
     <div id="dataTable">
         <div class="loading">加载中...</div>
@@ -188,20 +263,26 @@
 <script>
     const API_BASE = '/api';
     let tableConfig = null;
-    let allColumns = [];  // 存储所有列名
-    let columnLabels = {}; // 列名到显示名的映射
-    let editableColumns = []; // 可编辑列
-    let primaryKey = 'id'; // 主键名
+    let allColumns = [];
+    let columnLabels = {};
+    let editableColumns = [];
+    let primaryKey = 'id';
+
+    // 分页相关变量
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalRecords = 0;
+    let allData = [];
+    let currentQueryType = 'all'; // 'all', 'byId', 'byName', 'search'
+    let currentQueryParams = {};
 
     // 页面加载时获取配置和表结构
     async function loadConfig() {
         try {
-            // 获取表结构
             const columnsResp = await fetch(API_BASE + '/columns');
             const columnsResult = await columnsResp.json();
             if (columnsResult && columnsResult.code === 200) {
                 allColumns = columnsResult.data;
-                // 构建列名到显示名的映射
                 for (const col of allColumns) {
                     let label = col.COLUMN_COMMENT;
                     if (!label || label === '') {
@@ -211,7 +292,6 @@
                 }
             }
 
-            // 获取配置
             const configResp = await fetch(API_BASE + '/config');
             const configResult = await configResp.json();
             if (configResult && configResult.code === 200) {
@@ -219,9 +299,7 @@
                 primaryKey = tableConfig.primaryKey || 'id';
                 document.getElementById('pageTitle').innerText = tableConfig.tableName + ' - 数据管理系统';
 
-                // 使用配置中的可编辑列，如果没有则使用所有列
                 editableColumns = tableConfig.editableColumns || allColumns.map(c => c.COLUMN_NAME);
-                // 过滤掉主键和自动生成的时间戳
                 editableColumns = editableColumns.filter(col =>
                     col !== primaryKey && col !== 'create_time' && col !== 'update_time'
                 );
@@ -241,7 +319,6 @@
     function buildSearchFields() {
         const searchField = document.getElementById('searchField');
         searchField.innerHTML = '';
-        // 使用所有可搜索的列
         const searchableCols = tableConfig.searchableColumns || allColumns.map(c => c.COLUMN_NAME);
 
         for (const col of searchableCols) {
@@ -273,7 +350,6 @@
 
             let inputEl;
             if (formType && formType.startsWith('select:')) {
-                // 处理下拉框
                 inputEl = document.createElement('select');
                 const options = formType.substring(7).split(',');
                 for (const opt of options) {
@@ -329,32 +405,181 @@
         }
     }
 
-    async function loadAll() {
-        if (!tableConfig) {
-            await loadConfig();
+    // 根据ID精确查询
+    async function searchById() {
+        const id = document.getElementById('searchById').value.trim();
+        if (!id) {
+            showMessage('请输入商品编号', 'error');
+            return;
         }
-        const result = await request(API_BASE + '/all', { method: 'GET' });
+
+        const result = await request(API_BASE + '/' + id, { method: 'GET' });
         if (result && result.code === 200) {
-            renderTable(result.data);
-            document.getElementById('recordCount').innerHTML = '共 ' + result.data.length + ' 条记录';
+            allData = [result.data];
+            totalRecords = 1;
+            currentPage = 1;
+            currentQueryType = 'byId';
+            currentQueryParams = { id: id };
+            renderTable(allData);
+            updatePagination();
+            document.getElementById('recordCount').innerHTML = '找到 1 条记录';
+        } else {
+            showMessage('未找到编号为 ' + id + ' 的记录', 'error');
+            allData = [];
+            totalRecords = 0;
+            renderTable([]);
+            updatePagination();
+            document.getElementById('recordCount').innerHTML = '共 0 条记录';
         }
     }
 
+    // 根据商品名模糊查询
+    async function searchByName() {
+        const keyword = document.getElementById('searchByName').value.trim();
+        if (!keyword) {
+            showMessage('请输入商品名称关键字', 'error');
+            return;
+        }
+
+        // 使用model字段进行模糊查询
+        const result = await request(API_BASE + '/search?field=model&keyword=' + encodeURIComponent(keyword), { method: 'GET' });
+        if (result && result.code === 200) {
+            allData = result.data;
+            totalRecords = allData.length;
+            currentPage = 1;
+            currentQueryType = 'byName';
+            currentQueryParams = { keyword: keyword };
+            renderTable(getPageData());
+            updatePagination();
+            document.getElementById('recordCount').innerHTML = '找到 ' + totalRecords + ' 条记录';
+            showMessage('找到 ' + totalRecords + ' 条包含 "' + keyword + '" 的记录', 'success');
+        } else {
+            showMessage('查询失败', 'error');
+        }
+    }
+
+    // 通用搜索
     async function search() {
         const field = document.getElementById('searchField').value;
         const keyword = document.getElementById('searchKeyword').value.trim();
 
         if (!keyword) {
-            loadAll();
+            loadPage(1);
             return;
         }
 
         const result = await request(API_BASE + '/search?field=' + encodeURIComponent(field) + '&keyword=' + encodeURIComponent(keyword), { method: 'GET' });
         if (result && result.code === 200) {
-            renderTable(result.data);
-            document.getElementById('recordCount').innerHTML = '找到 ' + result.data.length + ' 条记录';
-            showMessage('找到 ' + result.data.length + ' 条记录', 'success');
+            allData = result.data;
+            totalRecords = allData.length;
+            currentPage = 1;
+            currentQueryType = 'search';
+            currentQueryParams = { field: field, keyword: keyword };
+            renderTable(getPageData());
+            updatePagination();
+            document.getElementById('recordCount').innerHTML = '找到 ' + totalRecords + ' 条记录';
+            showMessage('找到 ' + totalRecords + ' 条记录', 'success');
         }
+    }
+
+    // 加载全部数据（分页）
+    async function loadPage(page) {
+        if (!tableConfig) {
+            await loadConfig();
+        }
+
+        currentPage = page;
+        currentQueryType = 'all';
+        currentQueryParams = {};
+
+        const result = await request(API_BASE + '/all', { method: 'GET' });
+        if (result && result.code === 200) {
+            allData = result.data;
+            totalRecords = allData.length;
+            renderTable(getPageData());
+            updatePagination();
+            document.getElementById('recordCount').innerHTML = '共 ' + totalRecords + ' 条记录';
+        }
+    }
+
+    // 获取当前页的数据
+    function getPageData() {
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        return allData.slice(start, end);
+    }
+
+    // 更新分页控件
+    function updatePagination() {
+        const totalPages = Math.ceil(totalRecords / pageSize);
+        const paginationDiv = document.getElementById('pagination');
+
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // 上一页
+        html += '<button class="btn-page" onclick="goToPage(' + (currentPage - 1) + ')" ' + (currentPage <= 1 ? 'disabled' : '') + '>上一页</button>';
+
+        // 页码按钮
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        if (startPage > 1) {
+            html += '<button class="btn-page" onclick="goToPage(1)">1</button>';
+            if (startPage > 2) html += '<span>...</span>';
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            html += '<button class="btn-page ' + (i === currentPage ? 'active' : '') + '" onclick="goToPage(' + i + ')">' + i + '</button>';
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) html += '<span>...</span>';
+            html += '<button class="btn-page" onclick="goToPage(' + totalPages + ')">' + totalPages + '</button>';
+        }
+
+        // 下一页
+        html += '<button class="btn-page" onclick="goToPage(' + (currentPage + 1) + ')" ' + (currentPage >= totalPages ? 'disabled' : '') + '>下一页</button>';
+
+        paginationDiv.innerHTML = html;
+    }
+
+    // 跳转到指定页
+    function goToPage(page) {
+        if (page < 1 || page > Math.ceil(totalRecords / pageSize)) return;
+        currentPage = page;
+
+        if (currentQueryType === 'all') {
+            renderTable(getPageData());
+        } else if (currentQueryType === 'byId') {
+            // ID查询不分页
+            renderTable(allData);
+        } else {
+            renderTable(getPageData());
+        }
+        updatePagination();
+
+        // 滚动到表格顶部
+        document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 修改每页显示记录数
+    function changePageSize() {
+        pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+        currentPage = 1;
+
+        if (currentQueryType === 'all') {
+            renderTable(getPageData());
+        } else if (currentQueryType === 'byId') {
+            renderTable(allData);
+        } else {
+            renderTable(getPageData());
+        }
+        updatePagination();
     }
 
     async function save() {
@@ -365,7 +590,6 @@
             const inputEl = document.getElementById('field_' + col);
             if (inputEl) {
                 let value = inputEl.value;
-                // 如果是空字符串，不提交该字段
                 if (value !== '') {
                     data[col] = value;
                 }
@@ -388,7 +612,7 @@
         if (result && result.code === 200) {
             showMessage(id ? '更新成功' : '新增成功', 'success');
             cancelEdit();
-            loadAll();
+            loadPage(1);
         } else {
             showMessage('保存失败: ' + (result ? result.msg : '未知错误'), 'error');
         }
@@ -440,7 +664,7 @@
         const result = await request(API_BASE + '/' + id, { method: 'DELETE' });
         if (result && result.code === 200) {
             showMessage('删除成功', 'success');
-            loadAll();
+            loadPage(1);
         } else {
             showMessage('删除失败', 'error');
         }
@@ -458,13 +682,20 @@
         }
     }
 
+    // 清空查询条件
+    function clearSearch() {
+        document.getElementById('searchById').value = '';
+        document.getElementById('searchByName').value = '';
+        document.getElementById('searchKeyword').value = '';
+        loadPage(1);
+    }
+
     function renderTable(data) {
         if (!data || data.length === 0) {
             document.getElementById('dataTable').innerHTML = '<p>暂无数据</p>';
             return;
         }
 
-        // 获取所有需要显示的列（排除大文本字段）
         const displayColumns = allColumns.filter(col =>
             col.COLUMN_NAME !== 'create_time' &&
             col.DATA_TYPE !== 'text' &&
@@ -487,7 +718,6 @@
                 if (val === null || val === undefined) {
                     val = '-';
                 }
-                // 截断过长的内容
                 if (typeof val === 'string' && val.length > 50) {
                     val = val.substring(0, 50) + '...';
                 }
@@ -506,7 +736,7 @@
     // 初始化
     (async function() {
         await loadConfig();
-        await loadAll();
+        await loadPage(1);
     })();
 </script>
 </body>

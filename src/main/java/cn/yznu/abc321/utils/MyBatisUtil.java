@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.utils;
+package cn.yznu.abc321.utils;
 
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;

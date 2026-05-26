@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.config;
+package cn.yznu.abc321.config;
 
 import java.util.List;
 import java.util.Map;

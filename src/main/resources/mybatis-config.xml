@@ -30,6 +30,6 @@
     </environments>
 
     <mappers>
-        <mapper resource="cn/yznu/abc4321/mapper/DynamicMapper.xml"/>
+        <mapper resource="cn/yznu/abc321/mapper/DynamicMapper.xml"/>
     </mappers>
 </configuration>

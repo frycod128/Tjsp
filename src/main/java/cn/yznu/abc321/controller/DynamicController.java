@@ -1,9 +1,9 @@
-package cn.yznu.abc4321.controller;
+package cn.yznu.abc321.controller;
 
-import cn.yznu.abc4321.config.TableConfig;
-import cn.yznu.abc4321.mapper.DynamicMapper;
-import cn.yznu.abc4321.utils.ConfigLoader;
-import cn.yznu.abc4321.utils.MyBatisUtil;
+import cn.yznu.abc321.config.TableConfig;
+import cn.yznu.abc321.mapper.DynamicMapper;
+import cn.yznu.abc321.utils.ConfigLoader;
+import cn.yznu.abc321.utils.MyBatisUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.session.SqlSession;
 

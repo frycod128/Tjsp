@@ -132,12 +132,12 @@
 | [src/main/resources/table-config.json](/src/main/resources/table-config.json) | 表显示配置 |
 | [src/main/resources/headphone.sql](/src/main/resources/headphone.sql) | 示例表SQL |
 | [src/main/webapp/index.jsp](/src/main/webapp/index.jsp) | 前端页面 |
-| [src/main/java/cn/yznu/abc4321/controller/DynamicController.java](/src/main/java/cn/yznu/abc4321/controller/DynamicController.java) | 后端控制器 |
-| [src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.java](/src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.java) | 数据访问接口 |
-| [src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.xml](/src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.xml) | SQL映射文件 |
-| [src/main/java/cn/yznu/abc4321/utils/MyBatisUtil.java](/src/main/java/cn/yznu/abc4321/utils/MyBatisUtil.java) | MyBatis工具类 |
-| [src/main/java/cn/yznu/abc4321/utils/ConfigLoader.java](/src/main/java/cn/yznu/abc4321/utils/ConfigLoader.java) | 配置加载器 |
-| [src/main/java/cn/yznu/abc4321/config/TableConfig.java](/src/main/java/cn/yznu/abc4321/config/TableConfig.java) | 配置实体类 |
+| [src/main/java/cn/yznu/abc4321/controller/DynamicController.java](/src/main/java/cn/yznu/abc321/controller/DynamicController.java) | 后端控制器 |
+| [src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.java](/src/main/java/cn/yznu/abc321/mapper/DynamicMapper.java) | 数据访问接口 |
+| [src/main/java/cn/yznu/abc4321/mapper/DynamicMapper.xml](/src/main/java/cn/yznu/abc321/mapper/DynamicMapper.xml) | SQL映射文件 |
+| [src/main/java/cn/yznu/abc4321/utils/MyBatisUtil.java](/src/main/java/cn/yznu/abc321/utils/MyBatisUtil.java) | MyBatis工具类 |
+| [src/main/java/cn/yznu/abc4321/utils/ConfigLoader.java](/src/main/java/cn/yznu/abc321/utils/ConfigLoader.java) | 配置加载器 |
+| [src/main/java/cn/yznu/abc4321/config/TableConfig.java](/src/main/java/cn/yznu/abc321/config/TableConfig.java) | 配置实体类 |
 
 ---
 

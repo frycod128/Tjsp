@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.mapper;
+package cn.yznu.abc321.mapper;
 
 import org.apache.ibatis.annotations.Param;
 

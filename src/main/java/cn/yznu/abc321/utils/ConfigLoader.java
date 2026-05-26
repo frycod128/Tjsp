@@ -1,7 +1,7 @@
-package cn.yznu.abc4321.utils;
+package cn.yznu.abc321.utils;
 
-import cn.yznu.abc4321.config.TableConfig;
-import cn.yznu.abc4321.mapper.DynamicMapper;
+import cn.yznu.abc321.config.TableConfig;
+import cn.yznu.abc321.mapper.DynamicMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.ibatis.io.Resources;
