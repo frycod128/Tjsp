@@ -1,8 +1,8 @@
-package cn.yznu.abc4321.controller;
+package cn.yznu.abc321.controller;
 
-import cn.yznu.abc4321.entity.Headphone;
-import cn.yznu.abc4321.mapper.HeadphoneMapper;
-import cn.yznu.abc4321.utils.MyBatisUtil;
+import cn.yznu.abc321.entity.Headphone;
+import cn.yznu.abc321.mapper.HeadphoneMapper;
+import cn.yznu.abc321.utils.MyBatisUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.session.SqlSession;
 

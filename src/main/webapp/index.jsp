@@ -14,6 +14,9 @@
             margin-top: 10px;
             font-weight: bold;
         }
+        .collapse-header:hover {
+            background: #e0e0e0;
+        }
         .collapse-content {
             border: 1px solid #ddd;
             border-top: none;
@@ -49,11 +52,11 @@
         }
         .form-group label {
             display: inline-block;
-            width: 80px;
+            width: 100px;
         }
         input, select {
             padding: 5px;
-            width: 150px;
+            width: 180px;
         }
         button {
             padding: 5px 15px;
@@ -78,6 +81,28 @@
             font-size: 12px;
         }
 
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination button {
+            margin: 0 5px;
+            padding: 5px 12px;
+        }
+        .pagination .page-info {
+            margin: 0 15px;
+            font-size: 14px;
+        }
+        .pagination input {
+            width: 60px;
+            text-align: center;
+        }
+
+        .page-size-select {
+            margin-left: 20px;
+            width: 70px;
+        }
+
         /* 固定列宽 */
         .col-id { width: 5%; }
         .col-model { width: 12%; }
@@ -99,6 +124,20 @@
         .btn-cancel:hover {
             background-color: #e0e0e0;
         }
+
+        .search-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .search-item {
+            display: flex;
+            align-items: center;
+        }
+        hr {
+            margin: 15px 0;
+        }
     </style>
 </head>
 <body>
@@ -110,19 +149,28 @@
 <div>
     <div class="collapse-header" onclick="toggleCollapse('search')">▼ 查询</div>
     <div id="searchCollapse" class="collapse-content">
-        <div class="form-group">
-            <label>字段:</label>
-            <select id="searchField">
-                <option value="model">型号</option>
-                <option value="brand">品牌</option>
-            </select>
+        <div class="search-row">
+            <div class="search-item">
+                <label>按ID查询:</label>
+                <input type="number" id="searchId" placeholder="输入ID" style="width:100px">
+                <button onclick="searchById()">查询</button>
+            </div>
+            <div class="search-item">
+                <label>字段:</label>
+                <select id="searchField">
+                    <option value="model">型号</option>
+                    <option value="brand">品牌</option>
+                </select>
+            </div>
+            <div class="search-item">
+                <label>关键字:</label>
+                <input type="text" id="searchKeyword" placeholder="请输入">
+            </div>
+            <div class="search-item">
+                <button onclick="search()">模糊查询</button>
+                <button onclick="loadPage(1)">显示全部</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>关键字:</label>
-            <input type="text" id="searchKeyword" placeholder="请输入">
-        </div>
-        <button onclick="search()">查询</button>
-        <button onclick="loadAll()">显示全部</button>
     </div>
 </div>
 
@@ -158,8 +206,46 @@
     <div id="dataTable"></div>
 </div>
 
+<!-- 分页区域 -->
+<div class="pagination">
+    <button onclick="loadPage(1)" ${currentPage == 1 ? 'disabled' : ''}>首页</button>
+    <button onclick="loadPage(currentPage - 1)" ${currentPage == 1 ? 'disabled' : ''}>上一页</button>
+    <span class="page-info">
+        第 <span id="currentPage">1</span> / <span id="totalPages">1</span> 页
+        (共 <span id="totalRecords">0</span> 条)
+    </span>
+    <button onclick="loadPage(currentPage + 1)" ${currentPage == totalPages ? 'disabled' : ''}>下一页</button>
+    <button onclick="loadPage(totalPages)" ${currentPage == totalPages ? 'disabled' : ''}>末页</button>
+
+    <span style="margin-left: 20px;">
+        跳转到:
+        <input type="number" id="gotoPage" min="1" style="width:60px">
+        <button onclick="gotoPage()">GO</button>
+    </span>
+
+    <span style="margin-left: 20px;">
+        每页显示:
+        <select id="pageSizeSelect" onchange="changePageSize()" class="page-size-select">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+        </select>
+        条
+    </span>
+</div>
+
 <script>
     const API_BASE = '/api/headphone';
+
+    // 分页变量
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalRecords = 0;
+    let totalPages = 1;
+    let allData = [];  // 缓存所有数据（用于前端分页）
+    let isFiltered = false;  // 是否处于筛选状态
+    let filteredData = [];  // 筛选后的数据
 
     function toggleCollapse(id) {
         const el = document.getElementById(id + 'Collapse');
@@ -182,29 +268,136 @@
         }
     }
 
-    async function loadAll() {
+    // 加载所有数据（用于前端分页）
+    async function loadAllData() {
         const result = await request(API_BASE + '/all', { method: 'GET' });
         if (result && result.code === 200) {
-            renderTable(result.data);
+            allData = result.data;
+            isFiltered = false;
+            totalRecords = allData.length;
+            totalPages = Math.ceil(totalRecords / pageSize);
+            updatePaginationInfo();
+            renderPageData();
         }
     }
 
+    // 按ID查询
+    async function searchById() {
+        const id = document.getElementById('searchId').value;
+        if (!id) {
+            showMessage('请输入ID', 'error');
+            return;
+        }
+        const result = await request(API_BASE + '/' + id, { method: 'GET' });
+        if (result && result.code === 200) {
+            // 单条数据转为数组显示
+            filteredData = [result.data];
+            isFiltered = true;
+            totalRecords = filteredData.length;
+            totalPages = 1;
+            currentPage = 1;
+            updatePaginationInfo();
+            renderTable(filteredData);
+            showMessage('查询成功', 'success');
+        } else {
+            showMessage('未找到ID为 ' + id + ' 的记录', 'error');
+        }
+    }
+
+    // 模糊查询（前端筛选）
     async function search() {
         const field = document.getElementById('searchField').value;
         const keyword = document.getElementById('searchKeyword').value.trim();
+
         if (!keyword) {
-            loadAll();
+            loadAllData();
             return;
         }
-        const result = await request(API_BASE + '/all', { method: 'GET' });
-        if (result && result.code === 200) {
-            let filtered = result.data.filter(item => {
-                const val = item[field] || '';
-                return val.toString().toLowerCase().includes(keyword.toLowerCase());
-            });
-            renderTable(filtered);
-            showMessage('找到 ' + filtered.length + ' 条', 'success');
+
+        // 如果没有缓存数据，先加载
+        if (allData.length === 0) {
+            const result = await request(API_BASE + '/all', { method: 'GET' });
+            if (result && result.code === 200) {
+                allData = result.data;
+            } else {
+                return;
+            }
         }
+
+        filteredData = allData.filter(item => {
+            const val = item[field] || '';
+            return val.toString().toLowerCase().includes(keyword.toLowerCase());
+        });
+
+        isFiltered = true;
+        totalRecords = filteredData.length;
+        totalPages = Math.ceil(totalRecords / pageSize);
+        currentPage = 1;
+        updatePaginationInfo();
+        renderPageData();
+        showMessage('找到 ' + filteredData.length + ' 条记录', 'success');
+    }
+
+    // 渲染当前页数据
+    function renderPageData() {
+        const dataSource = isFiltered ? filteredData : allData;
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        const pageData = dataSource.slice(start, end);
+        renderTable(pageData);
+    }
+
+    // 加载指定页
+    function loadPage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        updatePaginationInfo();
+        renderPageData();
+    }
+
+    // 跳转到指定页
+    function gotoPage() {
+        const page = parseInt(document.getElementById('gotoPage').value);
+        if (isNaN(page)) {
+            showMessage('请输入有效的页码', 'error');
+            return;
+        }
+        if (page < 1 || page > totalPages) {
+            showMessage('页码范围: 1 - ' + totalPages, 'error');
+            return;
+        }
+        loadPage(page);
+        document.getElementById('gotoPage').value = '';
+    }
+
+    // 改变每页显示条数
+    function changePageSize() {
+        pageSize = parseInt(document.getElementById('pageSizeSelect').value);
+        const dataSource = isFiltered ? filteredData : allData;
+        totalRecords = dataSource.length;
+        totalPages = Math.ceil(totalRecords / pageSize);
+        currentPage = 1;
+        updatePaginationInfo();
+        renderPageData();
+    }
+
+    // 更新分页控件信息
+    function updatePaginationInfo() {
+        document.getElementById('currentPage').innerText = currentPage;
+        document.getElementById('totalPages').innerText = totalPages;
+        document.getElementById('totalRecords').innerText = totalRecords;
+
+        // 更新按钮状态
+        const btns = document.querySelectorAll('.pagination button');
+        // 简单禁用处理
+    }
+
+    // 重置筛选状态
+    function resetFilter() {
+        isFiltered = false;
+        document.getElementById('searchId').value = '';
+        document.getElementById('searchKeyword').value = '';
+        loadAllData();
     }
 
     async function save() {
@@ -242,30 +435,30 @@
 
         if (result && result.code === 200) {
             showMessage(id ? '更新成功' : '新增成功', 'success');
-            cancelEdit();  // 使用 cancelEdit 重置所有状态
-            loadAll();
+            cancelEdit();
+            // 刷新数据
+            await loadAllData();
+            // 如果有筛选，重新应用筛选
+            if (isFiltered && document.getElementById('searchKeyword').value) {
+                await search();
+            }
         } else {
             showMessage('保存失败: ' + (result ? result.msg : '未知错误'), 'error');
         }
     }
 
-    // 取消编辑，恢复到新增模式
     function cancelEdit() {
-        clearForm();  // 清空表单
-        // 恢复标题
+        clearForm();
         const addHeader = document.querySelector('#addCollapse').parentElement.querySelector('.collapse-header');
         addHeader.innerHTML = '▼ 新增';
-        // 隐藏取消按钮，显示清空按钮
         document.getElementById('cancelBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'inline-block';
     }
 
     async function edit(id) {
-        // 修改标题
         const addHeader = document.querySelector('#addCollapse').parentElement.querySelector('.collapse-header');
         addHeader.innerHTML = '▼ 修改 (ID: ' + id + ')';
 
-        // 显示取消按钮，隐藏清空按钮
         document.getElementById('cancelBtn').style.display = 'inline-block';
         document.getElementById('clearBtn').style.display = 'none';
 
@@ -290,7 +483,7 @@
             document.getElementById('addCollapse').scrollIntoView({ behavior: 'smooth' });
         } else {
             showMessage('获取数据失败', 'error');
-            cancelEdit(); // 获取失败时恢复状态
+            cancelEdit();
         }
     }
 
@@ -299,7 +492,10 @@
         const result = await request(API_BASE + '/' + id, { method: 'DELETE' });
         if (result && result.code === 200) {
             showMessage('删除成功', 'success');
-            loadAll();
+            await loadAllData();
+            if (isFiltered && document.getElementById('searchKeyword').value) {
+                await search();
+            }
         } else {
             showMessage('删除失败', 'error');
         }
@@ -325,7 +521,6 @@
             return;
         }
 
-        // 列定义：key, 名称, 样式类
         const columns = [
             { key: 'id', name: 'ID', class: 'col-id' },
             { key: 'model', name: '型号', class: 'col-model' },
@@ -371,8 +566,8 @@
         document.getElementById('dataTable').innerHTML = html;
     }
 
-    // 加载数据
-    loadAll();
+    // 初始化 - 加载数据
+    loadAllData();
 </script>
 </body>
 </html>

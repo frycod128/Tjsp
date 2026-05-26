@@ -32,6 +32,6 @@
     </environments>
 
     <mappers>
-        <mapper resource="cn/yznu/abc4321/mapper/HeadphoneMapper.xml"/>
+        <mapper resource="cn/yznu/abc321/mapper/HeadphoneMapper.xml"/>
     </mappers>
 </configuration>

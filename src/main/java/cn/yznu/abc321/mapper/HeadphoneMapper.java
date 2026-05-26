@@ -1,6 +1,6 @@
-package cn.yznu.abc4321.mapper;
+package cn.yznu.abc321.mapper;
 
-import cn.yznu.abc4321.entity.Headphone;
+import cn.yznu.abc321.entity.Headphone;
 import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package cn.yznu.abc4321.entity;
+package cn.yznu.abc321.entity;
 
 import java.math.BigDecimal;
 import java.util.Date;
