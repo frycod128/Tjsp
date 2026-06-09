@@ -10,5 +10,5 @@ public interface GenericDao {
     List<String> getColumns(@Param("dbName") String dbName,
                             @Param("tableName") String tableName);
 
-    List<Map<String, Object>> queryTable(Map<String, Object> params);
+    List<Map<String, Object>> queryByKey(Map<String, Object> params);
 }

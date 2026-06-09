@@ -15,8 +15,8 @@
         ORDER BY ORDINAL_POSITION
     </select>
 
-    <select id="queryTable" resultType="map">
-        SELECT ${columns} FROM ${tableName}
+    <select id="queryByKey" resultType="map">
+        SELECT * FROM ${tableName} WHERE ${keyColumn} = #{keyValue}
     </select>
 
 </mapper>

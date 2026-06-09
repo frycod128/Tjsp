@@ -34,46 +34,56 @@ public class QueryServlet extends HttpServlet {
             return;
         }
 
-        Map<String, String> columnLabels = DbConfigLoader.getColumnLabels(table);
-        String[] cols = req.getParameterValues("cols");
+        String key = req.getParameter("key");
+        String value = req.getParameter("value");
 
-        // 无列选择 → 显示列勾选界面
-        if (cols == null || cols.length == 0) {
+        // 步骤2：选了表，但未选键 → 展示键选择界面
+        if (key == null || key.trim().isEmpty()) {
             req.setAttribute("table", table);
-            req.setAttribute("columns", columnLabels);
+            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
             req.getRequestDispatcher("/index.jsp").forward(req, resp);
             return;
         }
 
-        // 白名单过滤列名
-        List<String> safeCols = new ArrayList<>();
-        for (String c : cols) {
-            if (columnLabels.containsKey(c.trim())) safeCols.add(c.trim());
-        }
-        if (safeCols.isEmpty()) {
-            req.setAttribute("msg", "请至少选择一个有效列");
+        // 步骤3：执行 WHERE 查询
+        if (!DbConfigLoader.isValidColumn(table, key.trim())) {
+            req.setAttribute("msg", "无效的查询键");
             req.setAttribute("table", table);
-            req.setAttribute("columns", columnLabels);
+            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
             req.getRequestDispatcher("/index.jsp").forward(req, resp);
             return;
         }
 
-        // 执行查询
+        if (value == null || value.trim().isEmpty()) {
+            req.setAttribute("msg", "请输入查询值");
+            req.setAttribute("table", table);
+            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+            return;
+        }
+
         try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
             GenericDao dao = session.getMapper(GenericDao.class);
             Map<String, Object> params = new HashMap<>();
             params.put("tableName", table);
-            params.put("columns", String.join(", ", safeCols));
+            params.put("keyColumn", key.trim());
+            params.put("keyValue", value.trim());
 
-            List<Map<String, Object>> results = dao.queryTable(params);
+            List<Map<String, Object>> results = dao.queryByKey(params);
+
             req.setAttribute("table", table);
-            req.setAttribute("columns", columnLabels);
-            req.setAttribute("selectedCols", safeCols);
+            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
+            req.setAttribute("searchKey", key.trim());
+            req.setAttribute("searchValue", value.trim());
             req.setAttribute("results", results);
+
+            if (results.isEmpty()) {
+                req.setAttribute("msg", "未找到匹配记录");
+            }
         } catch (Exception e) {
             req.setAttribute("msg", "查询出错：" + e.getMessage());
             req.setAttribute("table", table);
-            req.setAttribute("columns", columnLabels);
+            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
         }
 
         req.getRequestDispatcher("/index.jsp").forward(req, resp);

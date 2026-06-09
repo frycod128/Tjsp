@@ -8,16 +8,15 @@
     <style>
         body{font-family:sans-serif;margin:40px;}
         table{border-collapse:collapse;margin:16px 0;width:100%;max-width:960px;}
-        th,td{border:1px solid #999;padding:6px 10px;text-align:center;}
+        th,td{border:1px solid #999;padding:6px 10px;}
         th{background:#eee;}
         .msg{color:#c00;margin:12px 0;}
         form{margin:12px 0;}
-        label{display:inline-block;margin:3px 18px 3px 0;}
     </style>
 </head>
 <body>
 
-<h2>数据库查询 — headphone_sj8</h2>
+<h2>数据库查询 — <%= cn.yznu.abc321.util.DbConfigLoader.getDbName() %></h2>
 
 <c:if test="${not empty msg}"><div class="msg">${msg}</div></c:if>
 
@@ -32,38 +31,53 @@
     <button type="submit">选表</button>
 </form>
 
-<!-- 步骤2：选列 -->
-<c:if test="${not empty table and empty results}">
+<!-- 步骤2：选键 + 输入值 -->
+<c:if test="${not empty table and empty results and empty searchKey}">
     <form method="post" action="query">
         <input type="hidden" name="table" value="${table}"/>
-        <c:forEach items="${columns}" var="col">
-            <label>
-                <input type="checkbox" name="cols" value="${col.key}" checked/>
-                    ${col.value} <small>(${col.key})</small>
-            </label><br/>
-        </c:forEach>
+        <p>
+            查询键：
+            <select name="key">
+                <c:forEach items="${columns}" var="col">
+                    <option value="${col.key}">${col.value} (${col.key})</option>
+                </c:forEach>
+            </select>
+        </p>
+        <p>
+            查询值：<input type="text" name="value" placeholder="输入值"/>
+        </p>
         <button type="submit">查询</button>
     </form>
 </c:if>
 
 <!-- 步骤3：结果 -->
 <c:if test="${not empty results}">
-    <h3>${table}</h3>
+    <p>
+        表 <b>${table}</b>，条件：<b>${columns[searchKey]}(${searchKey}) = ${searchValue}</b>
+    </p>
     <table>
         <tr>
-            <c:forEach items="${selectedCols}" var="col">
-                <th>${columns[col]}</th>
+            <c:forEach items="${columns}" var="col">
+                <th>${col.value}</th>
             </c:forEach>
         </tr>
         <c:forEach items="${results}" var="row">
             <tr>
-                <c:forEach items="${selectedCols}" var="col">
-                    <td>${row[col]}</td>
+                <c:forEach items="${columns}" var="col">
+                    <td>${row[col.key]}</td>
                 </c:forEach>
             </tr>
         </c:forEach>
     </table>
-    <a href="query">← 重新查询</a>
+    <p>
+        <a href="query">← 重新查询</a>
+        &nbsp;|&nbsp;
+        <a href="query?table=${table}">← 同表换条件</a>
+    </p>
+</c:if>
+
+<c:if test="${not empty searchKey and not empty results}">
+    <!-- 结果区已覆盖此分支 -->
 </c:if>
 
 </body>
