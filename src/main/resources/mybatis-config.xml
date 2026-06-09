@@ -15,6 +15,6 @@
         </environment>
     </environments>
     <mappers>
-        <mapper resource="mapper/PurchaseMapper.xml"/>
+        <mapper resource="mapper/GenericMapper.xml"/>
     </mappers>
 </configuration>

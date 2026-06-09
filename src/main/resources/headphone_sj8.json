@@ -1,0 +1,37 @@
+{
+  "headphone": {
+    "queryable": true,
+    "columns": {
+      "id": "耳机ID",
+      "model": "型号名称",
+      "brand": "品牌",
+      "driver_size": "驱动单元尺寸(mm)",
+      "impedance": "阻抗(Ω)",
+      "sensitivity": "灵敏度(dB)",
+      "frequency_response": "频响范围",
+      "price": "价格",
+      "stock": "库存数量",
+      "wireless": "是否无线",
+      "noise_cancelling": "是否降噪",
+      "create_time": "创建时间"
+    }
+  },
+  "user": {
+    "queryable": true,
+    "columns": {
+      "id": "用户ID",
+      "username": "用户名",
+      "phone": "手机号码"
+    }
+  },
+  "purchase": {
+    "queryable": true,
+    "columns": {
+      "id": "订单ID",
+      "user_id": "用户ID",
+      "headphone_id": "耳机ID",
+      "quantity": "购买数量",
+      "order_time": "下单时间"
+    }
+  }
+}

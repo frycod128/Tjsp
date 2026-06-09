@@ -1,53 +1,69 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>用户购买记录查询</title>
+    <title>数据库查询</title>
     <style>
-        body { font-family: sans-serif; margin: 40px; }
-        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 800px; }
-        th, td { border: 1px solid #999; padding: 8px 12px; text-align: center; }
-        th { background: #eee; }
-        .msg { color: #c00; margin-top: 16px; }
+        body{font-family:sans-serif;margin:40px;}
+        table{border-collapse:collapse;margin:16px 0;width:100%;max-width:960px;}
+        th,td{border:1px solid #999;padding:6px 10px;text-align:center;}
+        th{background:#eee;}
+        .msg{color:#c00;margin:12px 0;}
+        form{margin:12px 0;}
+        label{display:inline-block;margin:3px 18px 3px 0;}
     </style>
 </head>
 <body>
 
-<h2>根据手机号查询购买记录</h2>
-<form action="query" method="get">
-    <input type="text" name="phone" placeholder="输入手机号" value="${phone}" />
-    <button type="submit">查询</button>
+<h2>数据库查询 — headphone_sj8</h2>
+
+<c:if test="${not empty msg}"><div class="msg">${msg}</div></c:if>
+
+<!-- 步骤1：选表 -->
+<form method="post" action="query">
+    <select name="table">
+        <option value="">-- 选择表 --</option>
+        <c:forEach items="${tables}" var="t">
+            <option value="${t}" ${t eq table ? 'selected' : ''}>${t}</option>
+        </c:forEach>
+    </select>
+    <button type="submit">选表</button>
 </form>
 
-<c:if test="${not empty msg}">
-    <div class="msg">${msg}</div>
+<!-- 步骤2：选列 -->
+<c:if test="${not empty table and empty results}">
+    <form method="post" action="query">
+        <input type="hidden" name="table" value="${table}"/>
+        <c:forEach items="${columns}" var="col">
+            <label>
+                <input type="checkbox" name="cols" value="${col.key}" checked/>
+                    ${col.value} <small>(${col.key})</small>
+            </label><br/>
+        </c:forEach>
+        <button type="submit">查询</button>
+    </form>
 </c:if>
 
-<c:if test="${not empty records}">
+<!-- 步骤3：结果 -->
+<c:if test="${not empty results}">
+    <h3>${table}</h3>
     <table>
         <tr>
-            <th>用户名</th>
-            <th>手机号</th>
-            <th>耳机型号</th>
-            <th>品牌</th>
-            <th>单价(元)</th>
-            <th>数量</th>
-            <th>下单时间</th>
+            <c:forEach items="${selectedCols}" var="col">
+                <th>${columns[col]}</th>
+            </c:forEach>
         </tr>
-        <c:forEach items="${records}" var="r">
+        <c:forEach items="${results}" var="row">
             <tr>
-                <td>${r.username}</td>
-                <td>${r.phone}</td>
-                <td>${r.model}</td>
-                <td>${r.brand}</td>
-                <td>${r.price}</td>
-                <td>${r.quantity}</td>
-                <td>${r.orderTime}</td>
+                <c:forEach items="${selectedCols}" var="col">
+                    <td>${row[col]}</td>
+                </c:forEach>
             </tr>
         </c:forEach>
     </table>
+    <a href="query">← 重新查询</a>
 </c:if>
 
 </body>

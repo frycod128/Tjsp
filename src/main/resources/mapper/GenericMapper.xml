@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yznu.abc321.dao.GenericDao">
+
+    <select id="getTables" resultType="string">
+        SELECT TABLE_NAME FROM information_schema.TABLES
+        WHERE TABLE_SCHEMA = #{dbName} AND TABLE_TYPE = 'BASE TABLE'
+    </select>
+
+    <select id="getColumns" resultType="string">
+        SELECT COLUMN_NAME FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = #{dbName} AND TABLE_NAME = #{tableName}
+        ORDER BY ORDINAL_POSITION
+    </select>
+
+    <select id="queryTable" resultType="map">
+        SELECT ${columns} FROM ${tableName}
+    </select>
+
+</mapper>

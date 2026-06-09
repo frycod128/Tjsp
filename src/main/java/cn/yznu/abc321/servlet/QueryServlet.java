@@ -1,41 +1,79 @@
 package cn.yznu.abc321.servlet;
 
-import cn.yznu.abc321.entity.PurchaseRecord;
-import cn.yznu.abc321.service.UserOrderService;
+import cn.yznu.abc321.dao.GenericDao;
+import cn.yznu.abc321.util.DbConfigLoader;
+import cn.yznu.abc321.util.MyBatisUtil;
+import org.apache.ibatis.session.SqlSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.*;
 import java.io.IOException;
-import java.util.List;
+import java.util.*;
 
 @WebServlet("/query")
 public class QueryServlet extends HttpServlet {
 
-    private final UserOrderService service = new UserOrderService();
-
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        String phone = req.getParameter("phone");
+        req.setAttribute("tables", DbConfigLoader.getQueryableTables());
+        req.getRequestDispatcher("/index.jsp").forward(req, resp);
+    }
 
-        if (phone == null || phone.trim().isEmpty()) {
-            req.setAttribute("msg", "请输入手机号码");
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
+        List<String> validTables = DbConfigLoader.getQueryableTables();
+        req.setAttribute("tables", validTables);
+
+        String table = req.getParameter("table");
+        if (table == null || !validTables.contains(table)) {
+            req.setAttribute("msg", "请选择有效的表");
             req.getRequestDispatcher("/index.jsp").forward(req, resp);
             return;
         }
 
-        phone = phone.trim();
-        List<PurchaseRecord> records = service.queryByPhone(phone);
+        Map<String, String> columnLabels = DbConfigLoader.getColumnLabels(table);
+        String[] cols = req.getParameterValues("cols");
 
-        req.setAttribute("phone", phone);   // 无论有无结果都回显
+        // 无列选择 → 显示列勾选界面
+        if (cols == null || cols.length == 0) {
+            req.setAttribute("table", table);
+            req.setAttribute("columns", columnLabels);
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+            return;
+        }
 
-        if (records.isEmpty()) {
-            req.setAttribute("msg", "未找到该手机号对应的购买记录");
-        } else {
-            req.setAttribute("records", records);
+        // 白名单过滤列名
+        List<String> safeCols = new ArrayList<>();
+        for (String c : cols) {
+            if (columnLabels.containsKey(c.trim())) safeCols.add(c.trim());
+        }
+        if (safeCols.isEmpty()) {
+            req.setAttribute("msg", "请至少选择一个有效列");
+            req.setAttribute("table", table);
+            req.setAttribute("columns", columnLabels);
+            req.getRequestDispatcher("/index.jsp").forward(req, resp);
+            return;
+        }
+
+        // 执行查询
+        try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
+            GenericDao dao = session.getMapper(GenericDao.class);
+            Map<String, Object> params = new HashMap<>();
+            params.put("tableName", table);
+            params.put("columns", String.join(", ", safeCols));
+
+            List<Map<String, Object>> results = dao.queryTable(params);
+            req.setAttribute("table", table);
+            req.setAttribute("columns", columnLabels);
+            req.setAttribute("selectedCols", safeCols);
+            req.setAttribute("results", results);
+        } catch (Exception e) {
+            req.setAttribute("msg", "查询出错：" + e.getMessage());
+            req.setAttribute("table", table);
+            req.setAttribute("columns", columnLabels);
         }
 
         req.getRequestDispatcher("/index.jsp").forward(req, resp);
