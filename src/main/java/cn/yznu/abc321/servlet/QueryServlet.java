@@ -27,15 +27,15 @@ public class QueryServlet extends HttpServlet {
             return;
         }
 
-        List<PurchaseRecord> records = service.queryByPhone(phone.trim());
+        phone = phone.trim();
+        List<PurchaseRecord> records = service.queryByPhone(phone);
+
+        req.setAttribute("phone", phone);   // 无论有无结果都回显
 
         if (records.isEmpty()) {
             req.setAttribute("msg", "未找到该手机号对应的购买记录");
-            req.setAttribute("phone", phone.trim());
-        }
-        else {
+        } else {
             req.setAttribute("records", records);
-            req.setAttribute("phone", phone.trim());
         }
 
         req.getRequestDispatcher("/index.jsp").forward(req, resp);
