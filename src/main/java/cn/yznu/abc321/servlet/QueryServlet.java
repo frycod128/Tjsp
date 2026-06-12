@@ -13,8 +13,15 @@ import javax.servlet.http.*;
 import java.io.IOException;
 import java.util.*;
 
-@WebServlet("/query")
+@WebServlet(value = "/query", loadOnStartup = 1)
 public class QueryServlet extends HttpServlet {
+
+    @Override
+    public void init() throws ServletException {
+        // 预热：确保 DbConfigLoader + MyBatis 在第一个请求前就绪
+        List<String> tables = DbConfigLoader.getQueryableTables();
+        getServletContext().log("[QueryServlet] 启动完成，可用表: " + tables);
+    }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -39,7 +46,6 @@ public class QueryServlet extends HttpServlet {
         String key = req.getParameter("key");
         String value = req.getParameter("value");
 
-        // 未选键 → 展示键选择界面
         if (key == null || key.trim().isEmpty()) {
             req.setAttribute("table", table);
             req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
@@ -77,7 +83,6 @@ public class QueryServlet extends HttpServlet {
                 req.setAttribute("table", table);
                 req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
             } else {
-                // 外键展开（深度3）
                 FkExpander expander = new FkExpander(MyBatisUtil.getSqlSessionFactory(), 3);
                 List<ExpandableRow> expanded = expander.expand(table, raw);
 

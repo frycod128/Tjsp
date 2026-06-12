@@ -1,6 +1,13 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page import="cn.yznu.abc321.util.DbConfigLoader" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
+
+<%-- 兜底：直接访问 / 或 index.jsp 时，tables 为空则主动加载 --%>
+<c:if test="${empty tables}">
+    <c:set var="tables" value="<%= DbConfigLoader.getQueryableTables() %>" scope="request"/>
+</c:if>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,7 +22,7 @@
 </head>
 <body>
 
-<h2>数据库查询 — <%= cn.yznu.abc321.util.DbConfigLoader.getDbName() %></h2>
+<h2>数据库查询 — <%= DbConfigLoader.getDbName() %></h2>
 
 <c:if test="${not empty msg}"><div class="msg">${msg}</div></c:if>
 
