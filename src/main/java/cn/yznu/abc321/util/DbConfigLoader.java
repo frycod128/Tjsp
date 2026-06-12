@@ -29,7 +29,7 @@ public class DbConfigLoader {
                         new TypeReference<Map<String, TableMeta>>() {});
                 config.putAll(loaded);
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException("解析 " + DB_NAME + ".json 失败", e);
             }
         }
     }
@@ -61,7 +61,6 @@ public class DbConfigLoader {
         return getColumnNames(tableName).contains(column);
     }
 
-    /** 本表外键→父表 */
     public static List<FkInfo> getOutgoingFks(String tableName) {
         return outgoingCache.computeIfAbsent(tableName, t -> {
             try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
@@ -70,7 +69,6 @@ public class DbConfigLoader {
         });
     }
 
-    /** 子表外键→本表 */
     public static List<FkInfo> getIncomingFks(String tableName) {
         return incomingCache.computeIfAbsent(tableName, t -> {
             try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
@@ -100,11 +98,16 @@ public class DbConfigLoader {
     private static String extractDbName() {
         try (InputStream is = DbConfigLoader.class.getClassLoader()
                 .getResourceAsStream("mybatis-config.xml")) {
-            if (is == null) return "headphone_sj8";
+            if (is == null)
+                throw new RuntimeException("未找到 mybatis-config.xml");
             String xml = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
             Matcher m = Pattern.compile("jdbc:mysql://[^/]+/([^?&]+)").matcher(xml);
             if (m.find()) return m.group(1);
-        } catch (Exception ignored) {}
-        return "headphone_sj8";
+            throw new RuntimeException("未能从 mybatis-config.xml 解析数据库名");
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("读取 mybatis-config.xml 失败", e);
+        }
     }
 }
