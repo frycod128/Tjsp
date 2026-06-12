@@ -1,7 +1,9 @@
 package cn.yznu.abc321.servlet;
 
 import cn.yznu.abc321.dao.GenericDao;
+import cn.yznu.abc321.entity.ExpandableRow;
 import cn.yznu.abc321.util.DbConfigLoader;
+import cn.yznu.abc321.util.FkExpander;
 import cn.yznu.abc321.util.MyBatisUtil;
 import org.apache.ibatis.session.SqlSession;
 
@@ -37,7 +39,7 @@ public class QueryServlet extends HttpServlet {
         String key = req.getParameter("key");
         String value = req.getParameter("value");
 
-        // 步骤2：选了表，但未选键 → 展示键选择界面
+        // 未选键 → 展示键选择界面
         if (key == null || key.trim().isEmpty()) {
             req.setAttribute("table", table);
             req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
@@ -45,7 +47,6 @@ public class QueryServlet extends HttpServlet {
             return;
         }
 
-        // 步骤3：执行 WHERE 查询
         if (!DbConfigLoader.isValidColumn(table, key.trim())) {
             req.setAttribute("msg", "无效的查询键");
             req.setAttribute("table", table);
@@ -69,16 +70,22 @@ public class QueryServlet extends HttpServlet {
             params.put("keyColumn", key.trim());
             params.put("keyValue", value.trim());
 
-            List<Map<String, Object>> results = dao.queryByKey(params);
+            List<Map<String, Object>> raw = dao.queryByKey(params);
 
-            req.setAttribute("table", table);
-            req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
-            req.setAttribute("searchKey", key.trim());
-            req.setAttribute("searchValue", value.trim());
-            req.setAttribute("results", results);
-
-            if (results.isEmpty()) {
+            if (raw.isEmpty()) {
                 req.setAttribute("msg", "未找到匹配记录");
+                req.setAttribute("table", table);
+                req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
+            } else {
+                // 外键展开（深度3）
+                FkExpander expander = new FkExpander(MyBatisUtil.getSqlSessionFactory(), 3);
+                List<ExpandableRow> expanded = expander.expand(table, raw);
+
+                req.setAttribute("table", table);
+                req.setAttribute("columns", DbConfigLoader.getColumnLabels(table));
+                req.setAttribute("searchKey", key.trim());
+                req.setAttribute("searchValue", value.trim());
+                req.setAttribute("expandedRows", expanded);
             }
         } catch (Exception e) {
             req.setAttribute("msg", "查询出错：" + e.getMessage());

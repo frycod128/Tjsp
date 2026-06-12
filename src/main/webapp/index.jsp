@@ -1,5 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="t" tagdir="/WEB-INF/tags" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,11 +8,9 @@
     <title>数据库查询</title>
     <style>
         body{font-family:sans-serif;margin:40px;}
-        table{border-collapse:collapse;margin:16px 0;width:100%;max-width:960px;}
-        th,td{border:1px solid #999;padding:6px 10px;}
-        th{background:#eee;}
         .msg{color:#c00;margin:12px 0;}
         form{margin:12px 0;}
+        .result-box{border:1px solid #ccc;padding:16px;margin-top:16px;background:#fafafa;max-width:1100px;}
     </style>
 </head>
 <body>
@@ -32,7 +31,7 @@
 </form>
 
 <!-- 步骤2：选键 + 输入值 -->
-<c:if test="${not empty table and empty results and empty searchKey}">
+<c:if test="${not empty table and empty expandedRows and empty searchKey}">
     <form method="post" action="query">
         <input type="hidden" name="table" value="${table}"/>
         <p>
@@ -51,33 +50,20 @@
 </c:if>
 
 <!-- 步骤3：结果 -->
-<c:if test="${not empty results}">
+<c:if test="${not empty expandedRows}">
     <p>
         表 <b>${table}</b>，条件：<b>${columns[searchKey]}(${searchKey}) = ${searchValue}</b>
     </p>
-    <table>
-        <tr>
-            <c:forEach items="${columns}" var="col">
-                <th>${col.value}</th>
-            </c:forEach>
-        </tr>
-        <c:forEach items="${results}" var="row">
-            <tr>
-                <c:forEach items="${columns}" var="col">
-                    <td>${row[col.key]}</td>
-                </c:forEach>
-            </tr>
+    <div class="result-box">
+        <c:forEach items="${expandedRows}" var="row">
+            <t:renderRow row="${row}" depth="0"/>
         </c:forEach>
-    </table>
+    </div>
     <p>
         <a href="query">← 重新查询</a>
         &nbsp;|&nbsp;
-        <a href="query?table=${table}">← 同表换条件</a>
+        <a href="query">← 同表换条件</a>
     </p>
-</c:if>
-
-<c:if test="${not empty searchKey and not empty results}">
-    <!-- 结果区已覆盖此分支 -->
 </c:if>
 
 </body>

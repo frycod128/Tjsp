@@ -19,4 +19,25 @@
         SELECT * FROM ${tableName} WHERE ${keyColumn} = #{keyValue}
     </select>
 
+    <!-- 本表作为引用方：本表外键→父表 -->
+    <select id="getOutgoingFks" resultType="cn.yznu.abc321.entity.FkInfo">
+        SELECT COLUMN_NAME AS columnName,
+               REFERENCED_TABLE_NAME AS referencedTable,
+               REFERENCED_COLUMN_NAME AS referencedColumn
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = #{dbName}
+          AND TABLE_NAME = #{tableName}
+          AND REFERENCED_TABLE_NAME IS NOT NULL
+    </select>
+
+    <!-- 本表作为被引用方：子表外键→本表 -->
+    <select id="getIncomingFks" resultType="cn.yznu.abc321.entity.FkInfo">
+        SELECT COLUMN_NAME AS columnName,
+               TABLE_NAME AS referencedTable,
+               REFERENCED_COLUMN_NAME AS referencedColumn
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = #{dbName}
+          AND REFERENCED_TABLE_NAME = #{tableName}
+    </select>
+
 </mapper>

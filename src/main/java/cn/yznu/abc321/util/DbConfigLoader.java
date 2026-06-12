@@ -1,6 +1,7 @@
 package cn.yznu.abc321.util;
 
 import cn.yznu.abc321.dao.GenericDao;
+import cn.yznu.abc321.entity.FkInfo;
 import cn.yznu.abc321.entity.TableMeta;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,8 @@ public class DbConfigLoader {
 
     private static final String DB_NAME = extractDbName();
     private static final Map<String, TableMeta> config = new LinkedHashMap<>();
+    private static final Map<String, List<FkInfo>> outgoingCache = new HashMap<>();
+    private static final Map<String, List<FkInfo>> incomingCache = new HashMap<>();
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -31,11 +34,8 @@ public class DbConfigLoader {
         }
     }
 
-    // ---------- 公开 API ----------
-
     public static String getDbName() { return DB_NAME; }
 
-    /** 可查询的表名列表 */
     public static List<String> getQueryableTables() {
         Set<String> result = new LinkedHashSet<>();
         for (Map.Entry<String, TableMeta> e : config.entrySet()) {
@@ -47,33 +47,44 @@ public class DbConfigLoader {
         return new ArrayList<>(result);
     }
 
-    /** 指定表的列名→标签 */
     public static Map<String, String> getColumnLabels(String tableName) {
         TableMeta meta = config.get(tableName);
-        if (meta != null && !meta.getColumns().isEmpty()) {
-            return meta.getColumns();
-        }
+        if (meta != null && !meta.getColumns().isEmpty()) return meta.getColumns();
         return fetchColumnsFromDb(tableName);
     }
 
-    /** 指定表的所有列名 */
     public static List<String> getColumnNames(String tableName) {
         return new ArrayList<>(getColumnLabels(tableName).keySet());
     }
 
-    /** 校验列名是否合法 */
     public static boolean isValidColumn(String tableName, String column) {
         return getColumnNames(tableName).contains(column);
     }
 
-    // ---------- 数据库回退 ----------
+    /** 本表外键→父表 */
+    public static List<FkInfo> getOutgoingFks(String tableName) {
+        return outgoingCache.computeIfAbsent(tableName, t -> {
+            try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
+                return s.getMapper(GenericDao.class).getOutgoingFks(DB_NAME, t);
+            }
+        });
+    }
+
+    /** 子表外键→本表 */
+    public static List<FkInfo> getIncomingFks(String tableName) {
+        return incomingCache.computeIfAbsent(tableName, t -> {
+            try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
+                return s.getMapper(GenericDao.class).getIncomingFks(DB_NAME, t);
+            }
+        });
+    }
+
+    // ---------- 私有 ----------
 
     private static List<String> fetchTablesFromDb() {
         try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
             return s.getMapper(GenericDao.class).getTables(DB_NAME);
-        } catch (Exception e) {
-            return Collections.emptyList();
-        }
+        } catch (Exception e) { return Collections.emptyList(); }
     }
 
     private static Map<String, String> fetchColumnsFromDb(String tableName) {
@@ -86,18 +97,14 @@ public class DbConfigLoader {
         return cols;
     }
 
-    // ---------- 从 mybatis-config.xml 解析库名 ----------
-
     private static String extractDbName() {
         try (InputStream is = DbConfigLoader.class.getClassLoader()
                 .getResourceAsStream("mybatis-config.xml")) {
             if (is == null) return "headphone_sj8";
             String xml = new String(is.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            // 匹配 JDBC URL 中的数据库名
-            Matcher m = Pattern.compile(
-                    "jdbc:mysql://[^/]+/([^?&]+)").matcher(xml);
+            Matcher m = Pattern.compile("jdbc:mysql://[^/]+/([^?&]+)").matcher(xml);
             if (m.find()) return m.group(1);
         } catch (Exception ignored) {}
-        return "headphone_sj8";   // 兜底
+        return "headphone_sj8";
     }
 }
