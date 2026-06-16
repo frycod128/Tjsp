@@ -3,7 +3,7 @@ package cn.yznu.abc321.util;
 import cn.yznu.abc321.dao.GenericDao;
 import cn.yznu.abc321.entity.FkInfo;
 import cn.yznu.abc321.entity.TableMeta;
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.ibatis.session.SqlSession;
 
@@ -25,14 +25,47 @@ public class DbConfigLoader {
                 .getResourceAsStream(DB_NAME + ".json");
         if (is != null) {
             try {
-                Map<String, TableMeta> loaded = mapper.readValue(is,
-                        new TypeReference<Map<String, TableMeta>>() {});
-                config.putAll(loaded);
+                JsonNode root = mapper.readTree(is);
+                for (Iterator<String> it = root.fieldNames(); it.hasNext(); ) {
+                    String table = it.next();
+                    JsonNode tn = root.get(table);
+                    TableMeta meta = new TableMeta();
+                    if (tn.has("queryable"))
+                        meta.setQueryable(tn.get("queryable").asBoolean());
+
+                    // columns: 值可以是字符串 "标签" 或对象 {"label":"标签"}
+                    Map<String, String> cols = new LinkedHashMap<>();
+                    JsonNode cn = tn.get("columns");
+                    if (cn != null) {
+                        for (Iterator<String> ci = cn.fieldNames(); ci.hasNext(); ) {
+                            String col = ci.next();
+                            JsonNode cv = cn.get(col);
+                            if (cv.isTextual())
+                                cols.put(col, cv.asText());
+                            else if (cv.has("label"))
+                                cols.put(col, cv.get("label").asText());
+                            else
+                                cols.put(col, col);
+                        }
+                    }
+                    meta.setColumns(cols);
+
+                    // fuzzyColumns
+                    List<String> fcs = new ArrayList<>();
+                    JsonNode fn = tn.get("fuzzyColumns");
+                    if (fn != null && fn.isArray()) {
+                        for (JsonNode f : fn) fcs.add(f.asText());
+                    }
+                    meta.setFuzzyColumns(fcs);
+                    config.put(table, meta);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("解析 " + DB_NAME + ".json 失败", e);
             }
         }
     }
+
+    // ============= 公开 API =============
 
     public static String getDbName() { return DB_NAME; }
 
@@ -47,6 +80,7 @@ public class DbConfigLoader {
         return new ArrayList<>(result);
     }
 
+    /** 列名→标签 */
     public static Map<String, String> getColumnLabels(String tableName) {
         TableMeta meta = config.get(tableName);
         if (meta != null && !meta.getColumns().isEmpty()) return meta.getColumns();
@@ -59,6 +93,18 @@ public class DbConfigLoader {
 
     public static boolean isValidColumn(String tableName, String column) {
         return getColumnNames(tableName).contains(column);
+    }
+
+    /** 适合批量模糊查询的列；未配置则返回所有列 */
+    public static List<String> getFuzzyColumns(String tableName) {
+        TableMeta meta = config.get(tableName);
+        if (meta != null && !meta.getFuzzyColumns().isEmpty())
+            return meta.getFuzzyColumns();
+        return getColumnNames(tableName);
+    }
+
+    public static String getColumnLabel(String tableName, String column) {
+        return getColumnLabels(tableName).getOrDefault(column, column);
     }
 
     public static List<FkInfo> getOutgoingFks(String tableName) {
@@ -77,7 +123,7 @@ public class DbConfigLoader {
         });
     }
 
-    // ---------- 私有 ----------
+    // ============= 私有 =============
 
     private static List<String> fetchTablesFromDb() {
         try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
@@ -88,9 +134,8 @@ public class DbConfigLoader {
     private static Map<String, String> fetchColumnsFromDb(String tableName) {
         Map<String, String> cols = new LinkedHashMap<>();
         try (SqlSession s = MyBatisUtil.getSqlSessionFactory().openSession()) {
-            for (String c : s.getMapper(GenericDao.class).getColumns(DB_NAME, tableName)) {
+            for (String c : s.getMapper(GenericDao.class).getColumns(DB_NAME, tableName))
                 cols.put(c, c);
-            }
         } catch (Exception ignored) {}
         return cols;
     }
@@ -104,10 +149,7 @@ public class DbConfigLoader {
             Matcher m = Pattern.compile("jdbc:mysql://[^/]+/([^?&]+)").matcher(xml);
             if (m.find()) return m.group(1);
             throw new RuntimeException("未能从 mybatis-config.xml 解析数据库名");
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("读取 mybatis-config.xml 失败", e);
-        }
+        } catch (RuntimeException e) { throw e;
+        } catch (Exception e) { throw new RuntimeException("读取 mybatis-config.xml 失败", e); }
     }
 }

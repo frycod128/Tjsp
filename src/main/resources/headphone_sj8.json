@@ -14,7 +14,8 @@
       "wireless": "是否无线",
       "noise_cancelling": "是否降噪",
       "create_time": "创建时间"
-    }
+    },
+    "fuzzyColumns": ["model", "brand"]
   },
   "user": {
     "queryable": true,
@@ -22,7 +23,8 @@
       "id": "用户ID",
       "username": "用户名",
       "phone": "手机号码"
-    }
+    },
+    "fuzzyColumns": ["username", "phone"]
   },
   "purchase": {
     "queryable": true,
@@ -32,6 +34,7 @@
       "headphone_id": "耳机ID",
       "quantity": "购买数量",
       "order_time": "下单时间"
-    }
+    },
+    "fuzzyColumns": []
   }
 }

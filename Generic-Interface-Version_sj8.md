@@ -29,12 +29,12 @@
 - [headphone_sj8.json](src/main/resources/headphone_sj8.json)
 
 
-| 字段 | 含义 | 必填                                   |
-|------|------|--------------------------------------|
-| `queryable` | `true` 在页面下拉框中出现，`false` 隐藏 | 否，默认 `true`                          |
+| 字段 | 含义 | 必填 |
+|------|------|------|
+| `queryable` | `true` 在页面下拉框中出现，`false` 隐藏 | 否，默认 `true` |
 | `columns` | 列名 → 页面表头标签映射 | 否，缺失列从 `information_schema` 补全，标签用原文 |
-| `表名` | 整个表缺省时默认 `queryable: true`，所有列自动从 DB 获取 | 否，默认使用源名                             |
-
+| `表名` | 整个表缺省时默认 `queryable: true`，所有列自动从 DB 获取 | 否，默认使用源名 |
+| `fuzzyColumns` | 模糊查询的列的列表 | 是，此项必须且无默认值 |
 ### 3. 创建或转换 SQL 数据
 
 DDL / DML 不限文件名，放在 `src/main/resources/` 下执行即可，例：

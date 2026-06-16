@@ -19,7 +19,34 @@
         SELECT * FROM ${tableName} WHERE ${keyColumn} = #{keyValue}
     </select>
 
-    <!-- 本表作为引用方：本表外键→父表 -->
+    <!-- 多条件 AND 动态查询 -->
+    <select id="dynamicQuery" resultType="map">
+        SELECT * FROM ${tableName}
+        <where>
+            <foreach collection="conditions" item="c" separator="AND">
+                <if test="c.value != null and c.value != ''">
+                    <choose>
+                        <when test="c.fuzzy == true">
+                            ${c.column} LIKE CONCAT('%', #{c.value}, '%')
+                        </when>
+                        <otherwise>
+                            ${c.column} = #{c.value}
+                        </otherwise>
+                    </choose>
+                </if>
+            </foreach>
+        </where>
+    </select>
+
+    <!-- 单列多值 OR 模糊查询 -->
+    <select id="batchFuzzyQuery" resultType="map">
+        SELECT * FROM ${tableName}
+        WHERE
+        <foreach collection="values" item="v" separator="OR" open="(" close=")">
+            ${column} LIKE CONCAT('%', #{v}, '%')
+        </foreach>
+    </select>
+
     <select id="getOutgoingFks" resultType="cn.yznu.abc321.entity.FkInfo">
         SELECT COLUMN_NAME AS columnName,
                REFERENCED_TABLE_NAME AS referencedTable,
@@ -30,7 +57,6 @@
           AND REFERENCED_TABLE_NAME IS NOT NULL
     </select>
 
-    <!-- 本表作为被引用方：子表外键→本表 -->
     <select id="getIncomingFks" resultType="cn.yznu.abc321.entity.FkInfo">
         SELECT COLUMN_NAME AS columnName,
                TABLE_NAME AS referencedTable,
