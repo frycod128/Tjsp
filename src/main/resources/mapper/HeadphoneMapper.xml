@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.yznu.abc321.dao.HeadphoneDao">
+
+    <!-- ========== 动态SQL：多条件AND查询 ========== -->
+    <select id="dynamicSearch" resultType="cn.yznu.abc321.entity.Headphone">
+        SELECT * FROM headphone
+        <where>
+            <if test="model != null and model != ''">
+                AND model LIKE CONCAT('%', #{model}, '%')
+            </if>
+            <if test="brand != null and brand != ''">
+                AND brand LIKE CONCAT('%', #{brand}, '%')
+            </if>
+            <if test="driverSize != null">
+                AND driver_size = #{driverSize}
+            </if>
+            <if test="impedance != null">
+                AND impedance = #{impedance}
+            </if>
+            <if test="sensitivity != null">
+                AND sensitivity = #{sensitivity}
+            </if>
+            <if test="frequencyResponse != null and frequencyResponse != ''">
+                AND frequency_response LIKE CONCAT('%', #{frequencyResponse}, '%')
+            </if>
+            <if test="priceMin != null">
+                AND price &gt;= #{priceMin}
+            </if>
+            <if test="priceMax != null">
+                AND price &lt;= #{priceMax}
+            </if>
+            <if test="stock != null">
+                AND stock &gt;= #{stock}
+            </if>
+            <if test="wireless != null">
+                AND wireless = #{wireless}
+            </if>
+            <if test="noiseCancelling != null">
+                AND noise_cancelling = #{noiseCancelling}
+            </if>
+        </where>
+    </select>
+
+    <!-- ========== 批量商品名模糊OR查询 ========== -->
+    <select id="searchByModels" resultType="cn.yznu.abc321.entity.Headphone">
+        SELECT * FROM headphone
+        <where>
+            <if test="list != null and list.size() > 0">
+                <foreach collection="list" item="m" open="(" separator=" OR " close=")">
+                    model LIKE CONCAT('%', #{m}, '%')
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

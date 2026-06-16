@@ -16,5 +16,6 @@
     </environments>
     <mappers>
         <mapper resource="mapper/PurchaseMapper.xml"/>
+        <mapper resource="mapper/HeadphoneMapper.xml"/>
     </mappers>
 </configuration>
